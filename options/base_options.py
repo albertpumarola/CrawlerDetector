@@ -31,6 +31,7 @@ class BaseOptions():
         self._parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
 
         self._parser.add_argument('--poses_g_sigma', type=float, default=0.06, help='initial learning rate for adam')
+        self._parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate for small_net adam')
         self._parser.add_argument('--lr_net_bb', type=float, default=0.0002, help='initial learning rate for net_proj adam')
         self._parser.add_argument('--lr_net_prob', type=float, default=0.0002, help='initial learning rate for net_z adam')
         self._parser.add_argument('--lambda_bb', type=float, default=100, help='lambda for bb in loss')

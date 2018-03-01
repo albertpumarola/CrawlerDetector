@@ -7,8 +7,8 @@ class SmallNet(NetworkBase):
         super(SmallNet, self).__init__()
 
         self._features = self._make_fatures()
-        self._bb_reg = self._make_reg(1)
-        self._prob_reg = self._make_reg(4)
+        self._bb_reg = self._make_reg(4)
+        self._prob_reg = self._make_reg(1, add_sigmoid=True)
 
         self._set_requires_grads(self._features, requires_grads=(not freeze))
         self._set_requires_grads(self._bb_reg, requires_grads=(not freeze))
@@ -31,14 +31,16 @@ class SmallNet(NetworkBase):
 
         return nn.Sequential(*layers)
 
-    def _make_reg(self, out_nc):
-        return nn.Sequential(
-            nn.Linear(512*2, 512),
-            nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(512, out_nc),
-            nn.Sigmoid()
-        )
+    def _make_reg(self, out_nc, add_sigmoid=False):
+        layers = [ nn.Linear(512*2, 512),
+                   nn.ReLU(True),
+                   nn.Dropout(),
+                   nn.Linear(512, out_nc)]
+
+        if add_sigmoid:
+            layers.append(nn.Sigmoid())
+
+        return nn.Sequential(*layers)
 
     def forward(self, x):
         features = self._features(x)

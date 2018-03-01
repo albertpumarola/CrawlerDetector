@@ -26,7 +26,8 @@ class ObjectBBDataset(DatasetBase):
     def __getitem__(self, index):
 
         pos_img = None
-        while pos_img is None:
+        pos_bb = None
+        while pos_img is None or (pos_bb is None and self._is_for_train):
             # if sample randomly: overwrite index
             if not self._opt.serial_batches:
                 index = random.randint(0, self._dataset_size - 1)
@@ -34,12 +35,13 @@ class ObjectBBDataset(DatasetBase):
             # get sample data
             sample_id = self._ids[index]
             pos_img, pos_img_path = self._get_image_by_id(sample_id)
-            pos_bb = self._get_bb_by_id(sample_id) if self._is_for_train else None
+            pos_bb = self._get_bb_by_id(sample_id)
 
             if pos_img is None:
                 print 'error reading %s, skipping sample' % sample_id
 
-        pos_img, pos_bb = self._augment_data(pos_img, pos_bb)
+        if self._is_for_train:
+            pos_img, pos_bb = self._augment_data(pos_img, pos_bb)
 
         # neg data
         neg_index = random.randint(0, self._neg_dataset_size - 1)
@@ -48,7 +50,7 @@ class ObjectBBDataset(DatasetBase):
         # transform data
         pos_img = self._transform(pos_img)
         neg_img = self._transform(neg_img)
-        pos_norm_bb = self._normalize_bb(pos_bb)
+        pos_norm_bb = self._normalize_bb(pos_bb) if pos_bb is not None else np.array([-1, -1, -1, -1])
 
         # pack data
         sample = {'pos_img': pos_img,
@@ -95,7 +97,10 @@ class ObjectBBDataset(DatasetBase):
         return Image.open(path).convert('RGB'), path
 
     def _get_bb_by_id(self, id):
-        return np.array(self._pos_bbs[id], dtype=np.float32)
+        if id in self._pos_bbs:
+            return np.array(self._pos_bbs[id], dtype=np.float32)
+        else:
+            return None
 
     def _read_bbs_file(self, path):
         '''
@@ -116,7 +121,7 @@ class ObjectBBDataset(DatasetBase):
         return (bb / self._norm_values - 0.5) * 2
 
     def _augment_data(self, img, bb):
-        aug_type = random.choice(['', 'h', 'v', 'hv'])
+        aug_type = random.choice(['', 'h', 'v', 'hv']) if bb is not None else None
         if aug_type == 'v':
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
             bb = np.array([2*bb[0], self._image_size_w, 2*bb[2], self._image_size_w]) - bb

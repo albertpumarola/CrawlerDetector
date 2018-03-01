@@ -39,7 +39,7 @@ class ObjectDetectorNetModel(BaseModel):
         self._neg_input_img.resize_(neg_input_img.size()).copy_(neg_input_img)
 
         # generate gt bb
-        pos_gt_norm_bb = input['pos_norm_bb'] if self._is_train else np.array([-1, -1, -1, -1])
+        pos_gt_norm_bb = input['pos_norm_bb']
         self._pos_input_norm_bb.resize_(pos_gt_norm_bb.size()).copy_(pos_gt_norm_bb)
 
         # store paths
@@ -133,7 +133,7 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_create_networks(self):
         # features network
-        self._net = NetworksFactory.get_by_name('small_net', freeze=True)
+        self._net = NetworksFactory.get_by_name('small_net', freeze=False)
         self._net = self._move_net_to_gpu(self._net)
 
     def _init_train_vars(self):
@@ -146,8 +146,8 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_prefetch_inputs(self):
         # prefetch gpu space for images
-        self._pos_input_img = self._Tensor(self._opt.batch_size, 3, self._opt.image_size, self._opt.image_size)
-        self._neg_input_img = self._Tensor(self._opt.batch_size, 3, self._opt.image_size, self._opt.image_size)
+        self._pos_input_img = self._Tensor(self._opt.batch_size, 3, self._opt.image_size_h, self._opt.image_size_w)
+        self._neg_input_img = self._Tensor(self._opt.batch_size, 3, self._opt.image_size_h, self._opt.image_size_w)
 
         # prefetch gpu space for poses
         self._pos_input_norm_bb = torch.zeros(self._opt.batch_size, 2, 2).cuda(self._gpu_bb)
