@@ -8,7 +8,7 @@ class SmallNet(NetworkBase):
 
         self._features = self._make_fatures()
         self._bb_reg = self._make_reg(bb_nc)
-        self._prob_reg = self._make_reg(prob_nc)
+        self._prob_reg = self._make_reg(prob_nc, add_sigmoid=True)
 
         self._set_requires_grads(self._features, requires_grads=(not freeze))
         self._set_requires_grads(self._bb_reg, requires_grads=(not freeze))
