@@ -7,7 +7,7 @@ python train.py \
 --name debug \
 --model object_detector_net_model_small \
 --checkpoints_dir ./checkpoints \
---batch_size 25 \
+--batch_size 20 \
 --gpu_ids 0 \
 --nepochs_no_decay 80 \
 --nepochs_decay 20

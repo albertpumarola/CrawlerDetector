@@ -38,7 +38,7 @@ class ObjectDetectorNetModel(BaseModel):
         self._pos_input_img.resize_(pos_input_img.size()).copy_(pos_input_img)
         self._neg_input_img.resize_(neg_input_img.size()).copy_(neg_input_img)
 
-        # generate gt bb
+        # gt bb
         pos_gt_norm_bb = input['pos_norm_bb']
         self._pos_input_norm_bb.resize_(pos_gt_norm_bb.size()).copy_(pos_gt_norm_bb)
 
@@ -174,10 +174,11 @@ class ObjectDetectorNetModel(BaseModel):
         neg_imgs = Variable(self._neg_input_img, volatile=(not self._is_train))
         gt_bb = Variable(self._pos_input_norm_bb, volatile=(not self._is_train))
 
-        # extract features
+        # estim bb and prob
         estim_pos_bb_lowres, estim_pos_prob = self._net(pos_imgs)
         estim_neg_bb_lowres, estim_neg_prob = self._net(neg_imgs)
 
+        # calculate losses
         self._loss_pos_bb_lowres = self._criterion_bb(estim_pos_bb_lowres, gt_bb) * self._opt.lambda_bb
         self._loss_pos_prob = self._criterion_prob(estim_pos_prob, self._gt_pos_prob) * self._opt.lambda_prob
         self._loss_neg_prob = self._criterion_prob(estim_neg_prob, self._gt_neg_prob) * self._opt.lambda_prob
@@ -226,6 +227,6 @@ class ObjectDetectorNetModel(BaseModel):
                                         ('estim_neg_prob', estim_neg_prob.cpu().data.numpy())])
 
     def _unormalize_bb(self, norm_bb):
-        bb = (norm_bb + 1) / 2.0 * np.array([self._opt.image_size_h, self._opt.image_size_w,
-                                             self._opt.image_size_h, self._opt.image_size_w])
+        bb = (norm_bb / 2.0 + 0.5) * np.array([self._opt.image_size_h, self._opt.image_size_w,
+                                               self._opt.image_size_h, self._opt.image_size_w])
         return bb

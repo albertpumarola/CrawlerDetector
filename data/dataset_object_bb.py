@@ -113,8 +113,8 @@ class ObjectBBDataset(DatasetBase):
 
     def _create_transform(self):
         transform_list = [transforms.ToTensor(),
-                          transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                               std=[0.229, 0.224, 0.225])]
+                          transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                                               std=[0.5, 0.5, 0.5])]
         self._transform = transforms.Compose(transform_list)
 
     def _normalize_bb(self, bb):

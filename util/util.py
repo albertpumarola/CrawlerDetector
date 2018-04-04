@@ -11,8 +11,8 @@ def tensor2im(img, imtype=np.uint8, unnormalize=True, idx=0):
     img = img.cpu().float()
 
     if unnormalize:
-        mean = [0.485, 0.456, 0.406]
-        std = [0.229, 0.224, 0.225]
+        mean = [0.5, 0.5, 0.5]
+        std = [0.5, 0.5, 0.5]
 
         for i, m, s in zip(img, mean, std):
             i.mul_(s).add_(m)

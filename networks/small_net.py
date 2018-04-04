@@ -3,12 +3,12 @@ from .networks import NetworkBase
 
 class SmallNet(NetworkBase):
 
-    def __init__(self, freeze=False):
+    def __init__(self, freeze=False, bb_nc=4, prob_nc=1):
         super(SmallNet, self).__init__()
 
         self._features = self._make_fatures()
-        self._bb_reg = self._make_reg(4)
-        self._prob_reg = self._make_reg(1, add_sigmoid=True)
+        self._bb_reg = self._make_reg(bb_nc)
+        self._prob_reg = self._make_reg(prob_nc)
 
         self._set_requires_grads(self._features, requires_grads=(not freeze))
         self._set_requires_grads(self._bb_reg, requires_grads=(not freeze))
