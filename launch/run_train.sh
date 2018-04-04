@@ -9,5 +9,5 @@ python train.py \
 --checkpoints_dir ./checkpoints \
 --batch_size 25 \
 --gpu_ids 0 \
---nepochs_no_decay 20 \
---nepochs_decay 10
+--nepochs_no_decay 80 \
+--nepochs_decay 20

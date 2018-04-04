@@ -14,8 +14,6 @@ class SmallNet(NetworkBase):
         self._set_requires_grads(self._bb_reg, requires_grads=(not freeze))
         self._set_requires_grads(self._prob_reg, requires_grads=(not freeze))
 
-
-
     def _make_fatures(self):
         cfg = [64, 'M', 128, 'M', 256, 'M', 512, 'M', 512, 'M', 512, 'M', 512, 'M']
         layers = []
