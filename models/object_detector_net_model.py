@@ -294,6 +294,6 @@ class ObjectDetectorNetModel(BaseModel):
                                         ('estim_neg_prob', estim_neg_prob.cpu().data.numpy())])
 
     def _unormalize_bb(self, norm_bb):
-        bb = (norm_bb + 1) / 2.0 * np.array([self._opt.image_size_h, self._opt.image_size_w,
-                                             self._opt.image_size_h, self._opt.image_size_w])
+        bb = (norm_bb / 2.0 + 0.5) * np.array([self._opt.image_size_h, self._opt.image_size_w,
+                                               self._opt.image_size_h, self._opt.image_size_w])
         return bb
