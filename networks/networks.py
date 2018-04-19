@@ -24,6 +24,12 @@ class NetworksFactory:
         elif network_name == 'small_net':
             from .small_net import SmallNet
             network = SmallNet(*args, **kwargs)
+        elif network_name == 'vgg_finetune':
+            from .vgg_finetune import VGG11
+            network = VGG11(*args, **kwargs)
+        elif network_name == 'prob_map_net':
+            from .prob_map_net import ProbMapNet
+            network = ProbMapNet(*args, **kwargs)
         else:
             network = None
             raise ValueError("Network [%s] not recognized." % network_name)
@@ -40,7 +46,7 @@ class NetworkBase(nn.Module):
     def name(self):
         return self._name
 
-    def _init_weights(self):
+    def init_weights(self):
         self.apply(self._weights_init_fn)
 
     def _weights_init_fn(self, m):

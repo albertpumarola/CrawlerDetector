@@ -108,20 +108,25 @@ class Train:
             self._model.forward(keep_data_for_visuals=(i_val_batch == 0))
             errors = self._model.get_current_errors()
 
-            # store current batch errors
-            for k, v in errors.iteritems():
-                if k in val_errors:
-                    val_errors[k] += v
-                else:
-                    val_errors[k] = v
+            # # store current batch errors
+            # for k, v in errors.iteritems():
+            #     if k in val_errors:
+            #         val_errors[k] += v
+            #     else:
+            #         val_errors[k] = v
 
-        # normalize errors
-        for k in val_errors.iterkeys():
-            val_errors[k] /= (i_val_batch+1)
+            break
+
+        # # normalize errors
+        # print i_val_batch
+        # for k in val_errors.iterkeys():
+        #     print val_errors[k]
+        #     val_errors[k] /= (i_val_batch+1)
+        #     print val_errors[k]
 
         # visualize
         t = (time.time() - val_start_time)
-        self._tb_visualizer.print_current_validate_errors(i_epoch, val_errors, t)
+        self._tb_visualizer.print_current_validate_errors(i_epoch, errors, t)
         self._tb_visualizer.plot_scalars(val_errors, total_steps, is_train=False)
         self._tb_visualizer.display_current_results(self._model.get_last_saved_visuals(), total_steps, is_train=False)
 

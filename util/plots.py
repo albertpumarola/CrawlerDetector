@@ -23,6 +23,8 @@ def plot_bb(img, pose, label=None, display_bb=True):
     if display_bb:
         u, v, h, w = pose[0], pose[1], pose[2] - pose[0], pose[3] - pose[1]
         ax.add_patch(patches.Rectangle((v, u), w, h, fill=False, edgecolor='green', linewidth=3))
+        ax.add_patch(patches.Circle((pose[1], pose[0]), fill=True, color='red'))
+        ax.add_patch(patches.Circle((pose[3], pose[2]), fill=True, color='blue'))
 
     # display label
     if label is not None:

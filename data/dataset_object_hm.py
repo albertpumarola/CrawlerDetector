@@ -9,10 +9,10 @@ import time
 import pickle
 
 
-class ObjectBBDataset(DatasetBase):
+class ObjectHMDataset(DatasetBase):
     def __init__(self, opt, is_for_train):
-        super(ObjectBBDataset, self).__init__(opt)
-        self._name = 'ObjectBBDataset'
+        super(ObjectHMDataset, self).__init__(opt)
+        self._name = 'ObjectHMDataset'
         self._is_for_train = is_for_train
 
         # prepare dataset
@@ -21,13 +21,12 @@ class ObjectBBDataset(DatasetBase):
 
         # dataset info
         self._image_size_h, self._image_size_w = opt.image_size_h, opt.image_size_w
-        self._norm_values = np.array([opt.net_image_size, opt.net_image_size, opt.net_image_size, opt.net_image_size])
 
     def __getitem__(self, index):
 
         pos_img = None
-        pos_bb = None
-        while pos_img is None or (pos_bb is None and self._is_for_train):
+        pos_hm = None
+        while pos_img is None or (pos_hm is None and self._is_for_train):
             # if sample randomly: overwrite index
             if not self._opt.serial_batches:
                 index = random.randint(0, self._dataset_size - 1)
@@ -35,7 +34,7 @@ class ObjectBBDataset(DatasetBase):
             # get sample data
             sample_id = self._ids[index]
             pos_img, pos_img_path = self._get_image_by_id(sample_id)
-            pos_bb = self._get_bb_by_id(sample_id)
+            pos_hm = self._get_hm_by_id(sample_id)
 
             if pos_img is None:
                 print 'error reading %s, skipping sample' % sample_id
@@ -45,21 +44,18 @@ class ObjectBBDataset(DatasetBase):
         neg_img, neg_img_path = self._get_image_by_id(neg_index, pos_sample=False)
 
         # augment data
-        pos_img, pos_bb = self._augment_data(pos_img, pos_bb)
+        pos_img, pos_hm = self._augment_data(pos_img, pos_hm)
         neg_img, _ = self._crop(neg_img, None)
 
         # transform data
         pos_img = self._transform(pos_img)
         neg_img = self._transform(neg_img)
-        pos_norm_bb = self._normalize_bb(pos_bb) if pos_bb is not None else np.array([-1, -1, -1, -1])
-        pos_norm_center = self._get_pos_ceneter(pos_norm_bb)
-
-        self._check_bb(pos_norm_bb)
+        pos_norm_hm = self._normalize_hm(pos_hm) if pos_hm is not None else np.array([-1, -1])
+        # print pos_norm_hm
 
         # pack data
         sample = {'pos_img': pos_img,
-                  'pos_norm_bb': pos_norm_bb,  # bb is represented with top-left and bottom-right coords Nx2 (2x2)
-                  'pos_norm_center': pos_norm_center,
+                  'pos_norm_pose': pos_norm_hm,  # hm pose is represented with ij
                   'neg_img': neg_img,
                   'pos_img_path': pos_img_path,
                   'neg_img_path': neg_img_path
@@ -76,12 +72,12 @@ class ObjectBBDataset(DatasetBase):
         # set dataset dir
         pos_imgs_dir = os.path.join(self._root, self._opt.pos_file_name, self._opt.images_folder)
         neg_imgs_dir = os.path.join(self._root, self._opt.neg_file_name, self._opt.images_folder)
-        pos_bb_file = os.path.join(self._root, self._opt.pos_file_name, self._opt.bbs_filename)
+        pos_hm_file = os.path.join(self._root, self._opt.pos_file_name, self._opt.hms_filename)
 
         # read dataset
         pos_imgs_paths = self._get_all_files_in_subfolders(pos_imgs_dir, self._is_image_file)
         self._neg_imgs_paths = self._get_all_files_in_subfolders(neg_imgs_dir, self._is_image_file)
-        self._pos_bbs = self._read_bbs_file(pos_bb_file)
+        self._pos_hms_dict = self._read_hms_file(pos_hm_file)
         self._pos_imgs_paths = dict(zip([os.path.basename(path)[:-4] for path in pos_imgs_paths], pos_imgs_paths))
 
         # read ids
@@ -101,15 +97,16 @@ class ObjectBBDataset(DatasetBase):
         path = self._pos_imgs_paths[id] if pos_sample else self._neg_imgs_paths[id]
         return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), path
 
-    def _get_bb_by_id(self, id):
-        if id in self._pos_bbs:
-            return np.array(self._pos_bbs[id], dtype=np.float32)
+    def _get_hm_by_id(self, id):
+        if id in self._pos_hms_dict:
+            return np.array(self._pos_hms_dict[id], dtype=np.int)
         else:
+            print 'b'
             return None
 
-    def _read_bbs_file(self, path):
+    def _read_hms_file(self, path):
         '''
-        Read file with all gt bbs
+        Read file with all gt hms
         :param path: File data must have shape dataset_size x 2*num_points (being num_points = 2)
         :return: Bounding Boxes represented with top-left and right-bottom coords (dataset_size x num_points x 2)
         '''
@@ -121,11 +118,11 @@ class ObjectBBDataset(DatasetBase):
                           transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
         self._transform = transforms.Compose(transform_list)
 
-    def _normalize_bb(self, bb):
-        return (bb / self._opt.net_image_size - 0.5) * 2
+    def _normalize_hm(self, hm):
+        return (hm.astype(np.float32) / self._opt.net_image_size - 0.5) * 2
 
-    def _augment_data(self, img, bb):
-        aug_type = random.choice(['', 'h', 'v', 'hv']) if bb is not None else None
+    def _augment_data(self, img, hm):
+        aug_type = random.choice(['', 'h', 'v', 'hv']) if hm is not None else None
         if aug_type == 'v':
             img = cv2.flip(img, 1)
         elif aug_type == 'h':
@@ -133,53 +130,40 @@ class ObjectBBDataset(DatasetBase):
         elif aug_type == 'hv':
             img = cv2.flip(cv2.flip(img, 0), 1)
 
-        if bb is not None:
-            top, left, bottom, right = bb
-            bb_h, bb_w = bottom-top, right-left
+        if hm is not None:
+            v, u = hm
             if aug_type == 'v':
-                left = self._image_size_w - left - bb_w
-                right = self._image_size_w - right + bb_w
+                u = self._image_size_w - u
             elif aug_type == 'h':
-                top = self._image_size_h - top - bb_h
-                bottom = self._image_size_h - bottom + bb_h
+                v = self._image_size_h - v
             elif aug_type == 'hv':
-                left = self._image_size_w - left - bb_w
-                right = self._image_size_w - right + bb_w
-                top = self._image_size_h - top - bb_h
-                bottom = self._image_size_h - bottom + bb_h
-            bb = (top, left, bottom, right)
+                v = self._image_size_h - v
+                u = self._image_size_w - u
+            hm = (v, u)
 
-        img, bb = self._crop(img, bb)
+        img, hm = self._crop(img, hm)
 
-        return img, bb
+        return img, hm
 
-    def _crop(self, img, bb):
-        if bb is not None:
-            top, left, bottom, right = bb
-            min_u, min_v = int(top * 0.75 + bottom * 0.25), int(left * 0.75 + right * 0.25)
-            max_u, max_v = int(top * 0.25 + bottom * 0.75), int(left * 0.25 + right * 0.75)
-            min_top = max(max_u-self._opt.net_image_size, 0)
-            max_top = min(min_u, self._opt.image_size_h-self._opt.net_image_size)
+    def _crop(self, img, hm, min_margin=20):
+        if hm is not None:
+            i, j = hm
+            min_i, min_j = np.clip(i-min_margin, 0, self._opt.image_size_h), np.clip(j-min_margin, 0, self._opt.image_size_w)
+            max_i, max_j = np.clip(i+min_margin, 0, self._opt.image_size_h), np.clip(j+min_margin, 0, self._opt.image_size_w)
+            min_top = max(max_i-self._opt.net_image_size, 0)
+            max_top = min(min_i, self._opt.image_size_h-self._opt.net_image_size)
 
-            min_left = max(max_v - self._opt.net_image_size, 0)
-            max_left = min(min_v, self._opt.image_size_w - self._opt.net_image_size)
+            min_left = max(max_j - self._opt.net_image_size, 0)
+            max_left = min(min_j, self._opt.image_size_w - self._opt.net_image_size)
 
             top_img = int(random.random()*(max_top-min_top)+min_top)
             left_img = int(random.random()*(max_left-min_left)+min_left)
-            bb -= np.array([top_img, left_img, top_img, left_img])
-            bb = np.clip(bb, 0, self._opt.net_image_size)
+            hm -= np.array([top_img, left_img])
+            hm = np.clip(hm, 0, self._opt.net_image_size)
 
         else:
             top_img = int(random.random() * (self._opt.image_size_h-self._opt.net_image_size))
             left_img = int(random.random() * (self._opt.image_size_w-self._opt.net_image_size))
 
         img = img[top_img:top_img + self._opt.net_image_size, left_img:left_img + self._opt.net_image_size, :]
-        return img, bb
-
-    def _check_bb(self, bb):
-        top, left, bottom, right = bb
-        assert top <= bottom and left <= right, 'Assert bb not correct'
-
-    def _get_pos_ceneter(self, bb):
-        top, left, bottom, right = bb
-        return np.array([(top+bottom)/2, (left+right)/2]).astype(np.float32)
+        return img, hm

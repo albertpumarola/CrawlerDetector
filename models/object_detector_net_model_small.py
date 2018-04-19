@@ -6,6 +6,7 @@ import util.plots as plots
 from .models import BaseModel
 from networks.networks import NetworksFactory
 import numpy as np
+import torch.utils.model_zoo as model_zoo
 
 
 class ObjectDetectorNetModel(BaseModel):
@@ -24,6 +25,8 @@ class ObjectDetectorNetModel(BaseModel):
         # load networks and optimizers
         if not self._is_train or self._opt.load_epoch > 0:
             self.load()
+        # else:
+        #     self._load_vgg_weights()
 
         # prefetch variables
         self._init_prefetch_inputs()
@@ -57,6 +60,13 @@ class ObjectDetectorNetModel(BaseModel):
         # compute new gradients
         if self._is_train:
             loss_pose.backward()
+
+    def test(self, image):
+        # bb as (top, left, bottom, right)
+        estim_bb_lowres, estim_prob = self._net(Variable(image, volatile=True))
+        bb = self._unormalize_bb(estim_bb_lowres.data.numpy()).astype(np.int)
+        prob = estim_prob.data.numpy()
+        return bb, prob
 
     def optimize_parameters(self):
         self._optimizer.step()
@@ -100,10 +110,10 @@ class ObjectDetectorNetModel(BaseModel):
             visuals['pos_gt_bb_gt'] = plots.plot_bb(self._vis_input_pos_img, self._vis_gt_pos_bb_lowres)
             visuals['pos_estim_bb'] = plots.plot_bb(self._vis_input_pos_img, self._vis_estim_pos_bb_lowres,
                                                     label=self._vis_estim_pos_prob,
-                                                    display_bb=self._vis_estim_pos_prob>self._opt.classifier_threshold)
+                                                    display_bb=True)
             visuals['neg_estim_bb'] = plots.plot_bb(self._vis_input_neg_img, self._vis_estim_neg_bb_lowres,
                                                     label=self._vis_estim_neg_prob,
-                                                    display_bb=self._vis_estim_neg_prob>self._opt.classifier_threshold)
+                                                    display_bb=True)
         return visuals
 
     def save(self, label):
@@ -133,7 +143,8 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_create_networks(self):
         # features network
-        self._net = NetworksFactory.get_by_name('small_net', freeze=False)
+        # self._net = NetworksFactory.get_by_name('small_net', freeze=False)
+        self._net = NetworksFactory.get_by_name('vgg_finetune')
         self._net = self._move_net_to_gpu(self._net)
 
     def _init_train_vars(self):
@@ -141,8 +152,8 @@ class ObjectDetectorNetModel(BaseModel):
         self._current_lr = self._opt.lr
 
         # initialize optimizers
-        self._optimizer = torch.optim.Adam(self._net.parameters(), lr=self._current_lr,
-                                           weight_decay=self._opt.weight_decay)
+        self._optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self._net.parameters()),
+                                           lr=self._current_lr)
 
     def _init_prefetch_inputs(self):
         # prefetch gpu space for images
@@ -154,8 +165,9 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_losses(self):
         # define loss functions
-        self._criterion_bb = torch.nn.MSELoss().cuda()  # mean square error
+        self._criterion_bb = torch.nn.SmoothL1Loss().cuda()  # mean square error
         self._criterion_prob = torch.nn.BCELoss().cuda()  # binary cross-entropy
+        # self._criterion_prob = torch.nn.MSELoss().cuda()  # mean square error
 
         # define gt prob
         self._gt_pos_prob = Variable(torch.unsqueeze(torch.ones(self._opt.batch_size), -1)).cuda()
@@ -227,6 +239,12 @@ class ObjectDetectorNetModel(BaseModel):
                                         ('estim_neg_prob', estim_neg_prob.cpu().data.numpy())])
 
     def _unormalize_bb(self, norm_bb):
-        bb = (norm_bb / 2.0 + 0.5) * np.array([self._opt.image_size_h, self._opt.image_size_w,
-                                               self._opt.image_size_h, self._opt.image_size_w])
+        # bb = (norm_bb / 2.0 + 0.5) * np.array([self._opt.net_image_size, self._opt.net_image_size,
+        #                                        self._opt.net_image_size, self._opt.net_image_size])
+        bb = norm_bb * self._opt.net_image_size
         return bb
+
+    # def _load_vgg_weights(self):
+    #     pass
+    #     # self._net.load_state_dict(model_zoo.load_url('https://download.pytorch.org/models/vgg11_bn-6002323d.pth'),
+    #     #                           strict=False)

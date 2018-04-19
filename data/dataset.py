@@ -14,6 +14,9 @@ class DatasetFactory:
         if dataset_name == 'object_bb':
             from data.dataset_object_bb import ObjectBBDataset
             dataset = ObjectBBDataset(opt, is_for_train)
+        if dataset_name == 'object_hm':
+            from data.dataset_object_hm import ObjectHMDataset
+            dataset = ObjectHMDataset(opt, is_for_train)
         else:
             raise ValueError("Dataset [%s] not recognized." % dataset_name)
 

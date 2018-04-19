@@ -17,6 +17,9 @@ class ModelsFactory:
         elif model_name == 'object_detector_net_model_small':
             from .object_detector_net_model_small import ObjectDetectorNetModel
             model = ObjectDetectorNetModel(opt)
+        elif model_name == 'object_detector_net_prob_map':
+            from .object_detector_net_prob_map import ObjectDetectorNetModel
+            model = ObjectDetectorNetModel(opt)
         else:
             raise ValueError("Model [%s] not recognized." % opt.model)
 
@@ -118,8 +121,10 @@ class BaseModel(object):
     def _move_net_to_gpu(self, net, output_gpu=0):
         if len(self._gpu_ids) > 1:
             return torch.nn.DataParallel(net, device_ids=self._gpu_ids, output_device=output_gpu).cuda()
-        else:
+        elif len(self._gpu_ids) == 1:
             return net.cuda()
+        else:
+            return net
 
     def _update_lr(self, optimizer, old_lr, new_lr, network_name):
         for param_group in optimizer.param_groups:

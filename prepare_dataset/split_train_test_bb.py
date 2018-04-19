@@ -5,8 +5,8 @@ from tqdm import tqdm
 import numpy as np
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-ii', '--input_dir_imgs', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected/pos/', help='Input directory of the images to be cropped')
-parser.add_argument('-ib', '--input_dir_bbs', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected/bbs/', help='Input directory of the images to be cropped')
+parser.add_argument('-ii', '--input_dir_imgs', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected/pos/imgs', help='Input directory of the images to be cropped')
+parser.add_argument('-ib', '--input_dir_bbs', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected/pos/bbs/', help='Input directory of the images to be cropped')
 parser.add_argument('-o', '--output_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected/', help='Output path')
 args = parser.parse_args()
 

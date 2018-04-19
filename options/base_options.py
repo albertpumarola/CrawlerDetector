@@ -10,11 +10,12 @@ class BaseOptions():
         self._opt = None
 
     def initialize(self):
-        self._parser.add_argument('--data_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected/', help='path to train data')
+        self._parser.add_argument('--data_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_hm/', help='path to train data')
         self._parser.add_argument('--pos_file_name', type=str, default='pos', help='pos images folder')
         self._parser.add_argument('--neg_file_name', type=str, default='neg', help='neg images folder')
         self._parser.add_argument('--images_folder', type=str, default='imgs', help='pos images folder')
         self._parser.add_argument('--bbs_filename', type=str, default='bbs.pkl', help='pos bounding boxes files')
+        self._parser.add_argument('--hms_filename', type=str, default='hms.pkl', help='pos hm files')
         self._parser.add_argument('--train_ids_file', type=str, default='train_ids.csv',help='file containing train ids')
         self._parser.add_argument('--test_ids_file', type=str, default='test_ids.csv', help='file containing test ids')
 
@@ -22,20 +23,21 @@ class BaseOptions():
         self._parser.add_argument('--batch_size', type=int, default=2, help='input batch size')
         self._parser.add_argument('--image_size_h', type=int, default=240, help='input image size')
         self._parser.add_argument('--image_size_w', type=int, default=320, help='input image size')
-        self._parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-        self._parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
-        self._parser.add_argument('--dataset_mode', type=str, default='object_bb', help='chooses how datasets are loaded. [object_bb]')
-        self._parser.add_argument('--model', type=str, default='object_detector_net_model', help='chooses which model to use. [object_detector_net_model]')
+        self._parser.add_argument('--net_image_size', type=int, default=224, help='input image size')
+        self._parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+        self._parser.add_argument('--name', type=str, default='pretrained_model', help='name of the experiment. It decides where to store samples and models')
+        self._parser.add_argument('--dataset_mode', type=str, default='object_hm', help='chooses how datasets are loaded. [object_bb]')
+        self._parser.add_argument('--model', type=str, default='object_detector_net_prob_map', help='chooses which model to use. [object_detector_net_model]')
         self._parser.add_argument('--n_threads_test', default=1, type=int, help='# threads for loading data')
         self._parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         self._parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
 
         self._parser.add_argument('--poses_g_sigma', type=float, default=0.06, help='initial learning rate for adam')
         self._parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate for small_net adam')
-        self._parser.add_argument('--lr_net_bb', type=float, default=0.0002, help='initial learning rate for net_proj adam')
-        self._parser.add_argument('--lr_net_prob', type=float, default=0.0002, help='initial learning rate for net_z adam')
-        self._parser.add_argument('--lambda_bb', type=float, default=100, help='lambda for bb in loss')
-        self._parser.add_argument('--lambda_prob', type=float, default=1, help='lambda for prob in loss')
+        # self._parser.add_argument('--lr_net_bb', type=float, default=0.0002, help='initial learning rate for net_proj adam')
+        # self._parser.add_argument('--lr_net_prob', type=float, default=0.0002, help='initial learning rate for net_z adam')
+        self._parser.add_argument('--lambda_bb', type=float, default=1000, help='lambda for bb in loss')
+        self._parser.add_argument('--lambda_prob', type=float, default=1000, help='lambda for prob in loss')
         self._parser.add_argument('--classifier_threshold', type=float, default=0.5, help='classifier threshold')
 
         self._initialized = True
