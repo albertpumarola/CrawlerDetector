@@ -1,6 +1,6 @@
 import argparse
 import os
-from util import util
+from CrawlerDetector.util import util
 import torch
 
 class BaseOptions():
@@ -46,7 +46,7 @@ class BaseOptions():
     def parse(self):
         if not self._initialized:
             self.initialize()
-        self._opt = self._parser.parse_args()
+        self._opt, _ = self._parser.parse_known_args()
 
         # set is train or set
         self._opt.is_train = self.is_train
