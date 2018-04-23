@@ -6,8 +6,8 @@ import glob
 from shutil import copyfile
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-ii', '--input_bags_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/original/test/imgs/', help='Input images directory')
-parser.add_argument('-oi', '--output_bags_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/test/imgs/', help='Output images directory')
+parser.add_argument('-ii', '--input_bags_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/original/neg/imgs/', help='Input images directory')
+parser.add_argument('-oi', '--output_bags_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/neg/imgs/', help='Output images directory')
 parser.add_argument('-n', '--every_n_frames', type=int, default=3, help='Select every n frames')
 args = parser.parse_args()
 

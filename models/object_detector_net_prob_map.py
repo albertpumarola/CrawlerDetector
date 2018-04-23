@@ -65,8 +65,9 @@ class ObjectDetectorNetModel(BaseModel):
         estim_hm = self._net(Variable(image, volatile=True))
         if do_normalize_output:
             estim_hm = self._norm_hm(self._threshold_hm(estim_hm))
+        u_max, v_max = self._get_max_pixel_activation(estim_hm)
 
-        return estim_hm.data.numpy()
+        return estim_hm.data.numpy(), (u_max.data.numpy(), v_max.data.numpy())
 
     def optimize_parameters(self):
         self._optimizer.step()
@@ -254,3 +255,8 @@ class ObjectDetectorNetModel(BaseModel):
         hm_min = torch.min(torch.min(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
         hm_max = torch.max(torch.max(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
         return (hm - hm_min) / (hm_max - hm_min + 1e-8)
+
+    def _get_max_pixel_activation(self, hm):
+        # returns (u,v)
+        val, index = torch.max(hm.view(-1), 0)
+        return index % self._opt.net_image_size, index / self._opt.net_image_size

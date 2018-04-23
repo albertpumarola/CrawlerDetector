@@ -47,14 +47,15 @@
 #--nepochs_no_decay 10000 \
 #--nepochs_decay 50
 
-GPU=0
+GPU=1
 export CUDA_VISIBLE_DEVICES=$GPU
 # no pretrained weights
 python train.py \
---name prob_map5 \
+--name prob_map7 \
 --model object_detector_net_prob_map \
 --checkpoints_dir ./checkpoints \
 --batch_size 120 \
 --gpu_ids 0 \
+--poses_g_sigma 1.2 \
 --nepochs_no_decay 80 \
 --nepochs_decay 20
