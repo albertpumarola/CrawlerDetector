@@ -10,9 +10,10 @@ class BaseOptions():
         self._opt = None
 
     def initialize(self):
-        self._parser.add_argument('--data_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_hm/', help='path to train data')
-        self._parser.add_argument('--pos_file_name', type=str, default='pos', help='pos images folder')
+        self._parser.add_argument('--data_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/', help='path to train data')
         self._parser.add_argument('--neg_file_name', type=str, default='neg', help='neg images folder')
+        self._parser.add_argument('--train_pos_file_name', type=str, default='pos', help='train images folder')
+        self._parser.add_argument('--test_pos_file_name', type=str, default='test', help='test images folder')
         self._parser.add_argument('--images_folder', type=str, default='imgs', help='pos images folder')
         self._parser.add_argument('--bbs_filename', type=str, default='bbs.pkl', help='pos bounding boxes files')
         self._parser.add_argument('--hms_filename', type=str, default='hms.pkl', help='pos hm files')

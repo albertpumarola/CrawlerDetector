@@ -50,7 +50,8 @@ class ObjectHMDataset(DatasetBase):
         # transform data
         pos_img = self._transform(pos_img)
         neg_img = self._transform(neg_img)
-        pos_norm_hm = self._normalize_hm(pos_hm) if pos_hm is not None else np.array([-1, -1])
+        pos_norm_hm = self._normalize_hm(pos_hm) if pos_hm is not None else np.array([-1, -1], dtype=np.float32)
+        # pos_norm_hm = np.array([-1, -1]).astype(np.float32)
         # print pos_norm_hm
 
         # pack data
@@ -61,6 +62,9 @@ class ObjectHMDataset(DatasetBase):
                   'neg_img_path': neg_img_path
                   }
 
+        if pos_norm_hm.dtype != 'float32':
+            print pos_norm_hm.dtype, pos_norm_hm
+
         return sample
 
     def __len__(self):
@@ -69,10 +73,12 @@ class ObjectHMDataset(DatasetBase):
     def _read_dataset(self):
         assert os.path.isdir(self._root), '%s is not a valid directory' % self._root
 
+        pos_file_name = self._opt.train_pos_file_name if self._is_for_train else self._opt.test_pos_file_name
+
         # set dataset dir
-        pos_imgs_dir = os.path.join(self._root, self._opt.pos_file_name, self._opt.images_folder)
+        pos_imgs_dir = os.path.join(self._root, pos_file_name, self._opt.images_folder)
         neg_imgs_dir = os.path.join(self._root, self._opt.neg_file_name, self._opt.images_folder)
-        pos_hm_file = os.path.join(self._root, self._opt.pos_file_name, self._opt.hms_filename)
+        pos_hm_file = os.path.join(self._root, pos_file_name, self._opt.hms_filename)
 
         # read dataset
         pos_imgs_paths = self._get_all_files_in_subfolders(pos_imgs_dir, self._is_image_file)
@@ -101,7 +107,6 @@ class ObjectHMDataset(DatasetBase):
         if id in self._pos_hms_dict:
             return np.array(self._pos_hms_dict[id], dtype=np.int)
         else:
-            print 'b'
             return None
 
     def _read_hms_file(self, path):
@@ -119,7 +124,7 @@ class ObjectHMDataset(DatasetBase):
         self._transform = transforms.Compose(transform_list)
 
     def _normalize_hm(self, hm):
-        return (hm.astype(np.float32) / self._opt.net_image_size - 0.5) * 2
+        return (hm.astype(np.float32) / self._opt.net_image_size - 0.5) * 2.
 
     def _augment_data(self, img, hm):
         aug_type = random.choice(['', 'h', 'v', 'hv']) if hm is not None else None

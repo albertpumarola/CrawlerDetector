@@ -4,8 +4,8 @@ import argparse
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-ii', '--input_images_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_imgs', help='Input directory of the images to be cropped')
-parser.add_argument('-oi', '--output_images_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_imgs', help='Output directory of the images to be cropped')
+parser.add_argument('-ii', '--input_images_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/test/imgs', help='Input directory of the images to be cropped')
+parser.add_argument('-oi', '--output_images_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/test/imgs', help='Output directory of the images to be cropped')
 parser.add_argument('-H', '--new_H', type=int, default=240, help='New image H size')
 parser.add_argument('-W', '--new_W', type=int, default=320, help='New image W size')
 args = parser.parse_args()

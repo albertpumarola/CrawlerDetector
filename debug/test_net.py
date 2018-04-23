@@ -7,13 +7,13 @@ from torch.autograd import Variable
 from networks.vgg_features import VggFeatures
 from networks.prob_net import ProbNet
 from networks.bb_net import BBNet
-from networks.small_net import SmallNet
+from networks.prob_map_net import ProbMapNet
 
 import torch
 
 opt = TrainOptions().parse()
 
-B, C, H, W = 4, 3, opt.image_size_h, opt.image_size_w
+B, C, H, W = 4, 3, opt.net_image_size, opt.net_image_size
 batch_imgs = Variable(torch.ones([B, C, H, W])).cuda()
 
 # feature_extractor = VggFeatures()
@@ -34,6 +34,6 @@ batch_imgs = Variable(torch.ones([B, C, H, W])).cuda()
 # prob = prob_net(features)
 # print('prob', prob.size())
 
-net = SmallNet().cuda()
-a, b = net(batch_imgs)
-print a.size(), b.size()
+net = ProbMapNet().cuda()
+a = net(batch_imgs)
+print a.size()

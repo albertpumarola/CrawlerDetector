@@ -54,8 +54,10 @@ def plot_overlay_attention(image, attention,
 
     H, W = attention.shape
     ax.imshow(image, extent=[0, H, 0, W])
+    # heatmap = ax.imshow(attention, cmap=cmap,
+    #                     alpha=alpha, extent=[0, H, 0, W], vmin=np.min(attention), vmax=np.max(attention))
     heatmap = ax.imshow(attention, cmap=cmap,
-                        alpha=alpha, extent=[0, H, 0, W], vmin=np.min(attention), vmax=np.max(attention))
+                        alpha=alpha, extent=[0, H, 0, W], vmin=0, vmax=1)
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)

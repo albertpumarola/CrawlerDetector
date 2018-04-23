@@ -4,36 +4,57 @@ from .networks import NetworkBase
 import torch
 
 class ProbMapNet(NetworkBase):
-    def __init__(self, conv_dim=64, repeat_num=1):
+    def __init__(self, conv_dim=16, repeat_num=1):
         super(ProbMapNet, self).__init__()
         self._name = 'ProbMapNet'
 
         layers = []
+        # print conv_dim
         layers.append(nn.Conv2d(3, conv_dim, kernel_size=7, stride=1, padding=3, bias=False))
         layers.append(nn.InstanceNorm2d(conv_dim, affine=True))
         layers.append(nn.ReLU(inplace=True))
 
         # Down-Sampling
-        curr_dim = conv_dim
-        for i in range(2):
-            layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1, bias=False))
-            layers.append(nn.InstanceNorm2d(curr_dim*2, affine=True))
+        down_dims_in = [conv_dim, conv_dim, conv_dim * 2, conv_dim * 2, conv_dim * 4]
+        down_dims_out = [conv_dim, conv_dim * 2, conv_dim * 2, conv_dim * 4, conv_dim * 4]
+        for i in range(len(down_dims_in)):
+            # print 'd', down_dims_out[i]
+            layers.append(nn.Conv2d(down_dims_in[i], down_dims_out[i], kernel_size=4, stride=2, padding=1, bias=False))
+            layers.append(nn.InstanceNorm2d(down_dims_out[i], affine=True))
             layers.append(nn.ReLU(inplace=True))
-            curr_dim = curr_dim * 2
 
         # Bottleneck
         for i in range(repeat_num):
-            layers.append(ResidualBlock(dim_in=curr_dim, dim_out=curr_dim))
+            # print 'b', conv_dim * 4
+            layers.append(ResidualBlock(dim_in=conv_dim * 4, dim_out=conv_dim * 4))
 
         # Up-Sampling
-        for i in range(2):
-            layers.append(nn.ConvTranspose2d(curr_dim, curr_dim//2, kernel_size=4, stride=2, padding=1, bias=False))
-            layers.append(nn.InstanceNorm2d(curr_dim//2, affine=True))
+        up_dims_in = [conv_dim * 4, conv_dim * 4, conv_dim * 2, conv_dim * 2, conv_dim]
+        up_dims_out = [conv_dim * 4, conv_dim * 2, conv_dim * 2, conv_dim, conv_dim]
+        for i in range(len(up_dims_in)):
+            # print 'u', up_dims_out[i]
+            layers.append(nn.ConvTranspose2d(up_dims_in[i], up_dims_out[i], kernel_size=4, stride=2, padding=1, bias=False))
+            layers.append(nn.InstanceNorm2d(up_dims_out[i], affine=True))
             layers.append(nn.ReLU(inplace=True))
-            curr_dim = curr_dim // 2
 
-        layers.append(nn.Conv2d(curr_dim, 1, kernel_size=7, stride=1, padding=3, bias=False))
+        # print curr_dim
+        # print 1
+        layers.append(nn.Conv2d(conv_dim, 1, kernel_size=7, stride=1, padding=3, bias=False))
         self._model = nn.Sequential(*layers)
+
+        # 16
+        # d16
+        # d32
+        # d32
+        # d64
+        # d64
+        # b64
+        # u64
+        # u32
+        # u32
+        # u16
+        # u16
+        # 1
 
     def forward(self, x):
         return self._model(x)

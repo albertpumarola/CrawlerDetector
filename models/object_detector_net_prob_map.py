@@ -25,8 +25,6 @@ class ObjectDetectorNetModel(BaseModel):
         # load networks and optimizers
         if not self._is_train or self._opt.load_epoch > 0:
             self.load()
-        # else:
-        #     self._load_vgg_weights()
 
         # prefetch variables
         self._init_prefetch_inputs()
@@ -63,13 +61,12 @@ class ObjectDetectorNetModel(BaseModel):
         if self._is_train:
             loss_pose.backward()
 
-    def test(self, image):
-        pass
-        # # bb as (top, left, bottom, right)
-        # estim_bb_lowres, estim_prob = self._net(Variable(image, volatile=True))
-        # bb = self._unormalize_bb(estim_bb_lowres.data.numpy()).astype(np.int)
-        # prob = estim_prob.data.numpy()
-        # return bb, prob
+    def test(self, image, do_normalize_output=False):
+        estim_hm = self._net(Variable(image, volatile=True))
+        if do_normalize_output:
+            estim_hm = self._norm_hm(self._threshold_hm(estim_hm))
+
+        return estim_hm.data.numpy()
 
     def optimize_parameters(self):
         self._optimizer.step()
@@ -84,11 +81,13 @@ class ObjectDetectorNetModel(BaseModel):
 
     def get_current_paths(self):
         return OrderedDict([('pos_img', self._pos_input_img_path),
-                            ('neg_img', self._neg_input_img_path)])
+                            ('neg_img', self._neg_input_img_path)
+                            ])
 
     def get_current_errors(self):
         return OrderedDict([('pos_hm', self._loss_pos_hm.data[0]),
-                            ('neg_hm', self._loss_neg_hm.data[0])])
+                            ('neg_hm', self._loss_neg_hm.data[0])
+                            ])
 
     def get_current_scalars(self):
         return OrderedDict([('lr', self._current_lr)])
@@ -107,7 +106,7 @@ class ObjectDetectorNetModel(BaseModel):
         visuals = OrderedDict()
         visuals['pos_gt_hm'] = plots.plot_overlay_attention(self._vis_input_pos_img, self._vis_gt_pos_hm[0, :, :])
         visuals['pos_estim_hm'] = plots.plot_overlay_attention(self._vis_input_pos_img, self._vis_estim_pos_hm[0, :, :])
-        visuals['neg_gt_hm'] = plots.plot_overlay_attention(self._vis_input_pos_img, self._vis_gt_neg_hm[0, :, :])
+        visuals['neg_gt_hm'] = plots.plot_overlay_attention(self._vis_input_neg_img, self._vis_gt_neg_hm[0, :, :])
         visuals['neg_estim_hm'] = plots.plot_overlay_attention(self._vis_input_neg_img, self._vis_estim_neg_hm[0, :, :])
         return visuals
 
@@ -179,7 +178,7 @@ class ObjectDetectorNetModel(BaseModel):
         # move to gpu, everything related to hm creation is moved to gpu 1 that has more free mem
         self._grid = torch.from_numpy(grid).float().cuda(self._gpu_bb)
         self._sigma = torch.from_numpy(sigma).float().cuda(self._gpu_bb)
-        self._threshold_hm = torch.nn.Threshold(0.8, 0)
+        self._threshold_hm = torch.nn.Threshold(0.2, 0)
 
     # --- FORWARD HELPERS ---
 
@@ -195,7 +194,7 @@ class ObjectDetectorNetModel(BaseModel):
 
         # calculate losses
         self._loss_pos_hm = self._criterion_pos(pos_hm, gt_hm) * self._opt.lambda_bb
-        self._loss_neg_hm = self._criterion_pos(neg_hm, self._gt_neg_hm) * self._opt.lambda_prob
+        self._loss_neg_hm = self._criterion_pos(neg_hm, self._gt_neg_hm) * self._opt.lambda_bb
 
         # combined loss (move loss bb to gpu 0)
         total_loss = self._loss_pos_hm + self._loss_neg_hm
@@ -208,10 +207,13 @@ class ObjectDetectorNetModel(BaseModel):
         # keep estimated data
         if keep_estimation:
             self._keep_estimation(pos_hm, neg_hm)
+            # self._keep_estimation(pos_hm)
+
 
         return total_loss
 
     def _keep_forward_data_for_visualization(self, pos_imgs, neg_imgs, pos_hm, neg_hm, gt_pos_hm, gt_neg_hm):
+    # def _keep_forward_data_for_visualization(self, pos_imgs, pos_hm, gt_pos_hm):
         # store img data
         self._vis_input_pos_img = util.tensor2im(pos_imgs.data)
         self._vis_input_neg_img = util.tensor2im(neg_imgs.data)
@@ -231,8 +233,8 @@ class ObjectDetectorNetModel(BaseModel):
     def _gaussian_grid(self, mu, sigma, grid):
         '''
         Generate gaussian grid
-        :param mu: must be normalized ...xNx2 (uv)
-        :param sigma: must be normalized ...xNx2 (uv)
+        :param mu: must be normalized ...xNx2 (ij)
+        :param sigma: must be normalized ...xNx2 (ij)
         :param grid:
         :return:
         '''
@@ -245,10 +247,10 @@ class ObjectDetectorNetModel(BaseModel):
         z = -torch.sum(torch.pow(grid - mu, 2) / (2 * torch.pow(sigma, 2)), dim=-1)
         G = torch.exp(z)
         G = G / torch.sum(torch.sum(G, dim=-1, keepdim=True), dim=-2, keepdim=True)
+        return self._norm_hm(G)
 
-        # normalize Gaussians (make every pixel between [0,1])
-        G_min = torch.min(torch.min(G, -1, keepdim=True)[0], -2, keepdim=True)[0]
-        G_max = torch.max(torch.max(G, -1, keepdim=True)[0], -2, keepdim=True)[0]
-        G = (G - G_min) / (G_max - G_min + 1e-8)
-
-        return G
+    def _norm_hm(self, hm):
+        # normalize hm (make every pixel between [0,1])
+        hm_min = torch.min(torch.min(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
+        hm_max = torch.max(torch.max(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
+        return (hm - hm_min) / (hm_max - hm_min + 1e-8)

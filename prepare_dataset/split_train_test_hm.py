@@ -5,10 +5,10 @@ from tqdm import tqdm
 import numpy as np
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-ii', '--input_dir_imgs', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_hm/pos/imgs', help='Input directory of the images to be cropped')
-parser.add_argument('-ib', '--input_dir_hms', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_hm/pos/hms/', help='Input directory of the images to be cropped')
-parser.add_argument('-p', '--train_ratio', type=float, default=0.8, help='train ratio samples')
-parser.add_argument('-o', '--output_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/selected_hm/', help='Output path')
+parser.add_argument('-ii', '--input_dir_imgs', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/pos/imgs', help='Input directory of the images to be cropped')
+parser.add_argument('-ib', '--input_dir_hms', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/pos/hms/', help='Input directory of the images to be cropped')
+parser.add_argument('-p', '--train_ratio', type=float, default=0.9, help='train ratio samples')
+parser.add_argument('-o', '--output_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/', help='Output path')
 
 
 args = parser.parse_args()

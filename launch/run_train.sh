@@ -51,10 +51,10 @@ GPU=0
 export CUDA_VISIBLE_DEVICES=$GPU
 # no pretrained weights
 python train.py \
---name prob_map1 \
+--name prob_map5 \
 --model object_detector_net_prob_map \
 --checkpoints_dir ./checkpoints \
---batch_size 10 \
+--batch_size 120 \
 --gpu_ids 0 \
---nepochs_no_decay 10000 \
---nepochs_decay 50
+--nepochs_no_decay 80 \
+--nepochs_decay 20

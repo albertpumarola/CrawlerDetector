@@ -64,7 +64,6 @@ class ObjectBBDataset(DatasetBase):
                   'pos_img_path': pos_img_path,
                   'neg_img_path': neg_img_path
                   }
-
         return sample
 
     def __len__(self):
