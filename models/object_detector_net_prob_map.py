@@ -27,11 +27,13 @@ class ObjectDetectorNetModel(BaseModel):
             self.load()
 
         # prefetch variables
-        self._init_prefetch_inputs()
-        self._init_prefetch_create_hm_vars()
+        if self._is_train:
+            self._init_prefetch_inputs()
+            self._init_prefetch_create_hm_vars()
 
-        # init
-        self._init_losses()
+        # init losses
+        if self._is_train:
+            self._init_losses()
 
     def set_input(self, input):
         # copy images efficiently
