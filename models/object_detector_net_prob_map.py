@@ -1,10 +1,10 @@
 import torch
 from collections import OrderedDict
 from torch.autograd import Variable
-import util.util as util
-import util.plots as plots
-from .models import BaseModel
-from networks.networks import NetworksFactory
+import CrawlerDetector.util.util as util
+import CrawlerDetector.util.plots as plots
+from CrawlerDetector.models.models import BaseModel
+from CrawlerDetector.networks.networks import NetworksFactory
 import numpy as np
 import torch.utils.model_zoo as model_zoo
 
