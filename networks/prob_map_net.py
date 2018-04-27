@@ -64,10 +64,10 @@ class ResidualBlock(nn.Module):
     def __init__(self, dim_in, dim_out):
         super(ResidualBlock, self).__init__()
         self.main = nn.Sequential(
-            nn.Conv2d(dim_in, dim_out, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(dim_in, dim_out, kernel_size=5, stride=1, padding=2, bias=False),
             nn.InstanceNorm2d(dim_out, affine=True),
             nn.ReLU(inplace=True),
-            nn.Conv2d(dim_out, dim_out, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(dim_out, dim_out, kernel_size=5, stride=1, padding=2, bias=False),
             nn.InstanceNorm2d(dim_out, affine=True))
 
     def forward(self, x):
