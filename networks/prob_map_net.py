@@ -37,24 +37,8 @@ class ProbMapNet(NetworkBase):
             layers.append(nn.InstanceNorm2d(up_dims_out[i], affine=True))
             layers.append(nn.ReLU(inplace=True))
 
-        # print curr_dim
-        # print 1
         layers.append(nn.Conv2d(conv_dim, 1, kernel_size=7, stride=1, padding=3, bias=False))
         self._model = nn.Sequential(*layers)
-
-        # 16
-        # d16
-        # d32
-        # d32
-        # d64
-        # d64
-        # b64
-        # u64
-        # u32
-        # u32
-        # u16
-        # u16
-        # 1
 
     def forward(self, x):
         return self._model(x)

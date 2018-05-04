@@ -36,7 +36,7 @@ class BaseModel(object):
         self._gpu_ids = opt.gpu_ids
         self._is_train = opt.is_train
 
-        self._Tensor = torch.cuda.FloatTensor if self._gpu_ids else torch.Tensor
+        self._device = torch.device("cuda" if self._gpu_ids else "cpu")
         self._save_dir = os.path.join(opt.checkpoints_dir, opt.name)
 
     @property
@@ -120,9 +120,9 @@ class BaseModel(object):
 
     def _move_net_to_gpu(self, net, output_gpu=0):
         if len(self._gpu_ids) > 1:
-            return torch.nn.DataParallel(net, device_ids=self._gpu_ids, output_device=output_gpu).cuda()
+            return torch.nn.DataParallel(net, device_ids=self._gpu_ids, output_device=output_gpu).to(self._device)
         elif len(self._gpu_ids) == 1:
-            return net.cuda()
+            return net.to(self._device)
         else:
             return net
 

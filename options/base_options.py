@@ -1,6 +1,8 @@
 import argparse
 import os
-from CrawlerDetector.util import util
+# from CrawlerDetector.util import util
+from util import util
+
 import torch
 
 class BaseOptions():
@@ -95,10 +97,6 @@ class BaseOptions():
             id = int(str_id)
             if id >= 0:
                 self._opt.gpu_ids.append(id)
-
-        # set gpu ids
-        if len(self._opt.gpu_ids) > 0:
-            torch.cuda.set_device(self._opt.gpu_ids[0])
 
     def _print(self, args):
         print('------------ Options -------------')

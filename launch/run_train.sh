@@ -57,5 +57,5 @@ python train.py \
 --batch_size 120 \
 --gpu_ids 0 \
 --poses_g_sigma 0.12 \
---nepochs_no_decay 80 \
---nepochs_decay 20
+--nepochs_no_decay 500 \
+--nepochs_decay 100

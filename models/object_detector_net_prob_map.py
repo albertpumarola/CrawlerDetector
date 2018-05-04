@@ -1,13 +1,16 @@
 import torch
 from collections import OrderedDict
-from torch.autograd import Variable
-import CrawlerDetector.util.util as util
-import CrawlerDetector.util.plots as plots
-from CrawlerDetector.models.models import BaseModel
-from CrawlerDetector.networks.networks import NetworksFactory
+# import CrawlerDetector.util.util as util
+# import CrawlerDetector.util.plots as plots
+# from CrawlerDetector.models.models import BaseModel
+# from CrawlerDetector.networks.networks import NetworksFactory
+import util.util as util
+import util.plots as plots
+from models import BaseModel
+# from models.models import BaseModel
+from networks.networks import NetworksFactory
 import numpy as np
-import torch.utils.model_zoo as model_zoo
-
+from torchsummary import summary
 
 class ObjectDetectorNetModel(BaseModel):
     def __init__(self, opt):
@@ -44,7 +47,7 @@ class ObjectDetectorNetModel(BaseModel):
 
         # gt bb
         self._pos_gt = input['pos_norm_pose']
-        pos = torch.unsqueeze(input['pos_norm_pose'], 1).cuda()
+        pos = torch.Tensor.unsqueeze(input['pos_norm_pose'], 1).to(self._device)
         self._pos_input_hm = self._gaussian_grid(pos, self._sigma, self._grid)
 
         # store paths
@@ -64,12 +67,13 @@ class ObjectDetectorNetModel(BaseModel):
             loss_pose.backward()
 
     def test(self, image, do_normalize_output=False):
-        estim_hm = self._net(Variable(image, volatile=True))
-        if do_normalize_output:
-            estim_hm = self._norm_hm(self._threshold_hm(estim_hm))
-        u_max, v_max = self._get_max_pixel_activation(estim_hm)
+        with torch.no_grad():
+            estim_hm = self._net(image)
+            if do_normalize_output:
+                estim_hm = self._norm_hm(self._threshold_hm(estim_hm))
+            u_max, v_max = self._get_max_pixel_activation(estim_hm)
 
-        return estim_hm.data.numpy(), (u_max.data.numpy(), v_max.data.numpy())
+        return estim_hm.detach().numpy(), (u_max.detach().numpy(), v_max.detach().numpy())
 
     def optimize_parameters(self):
         self._optimizer.step()
@@ -88,8 +92,8 @@ class ObjectDetectorNetModel(BaseModel):
                             ])
 
     def get_current_errors(self):
-        return OrderedDict([('pos_hm', self._loss_pos_hm.data[0]),
-                            ('neg_hm', self._loss_neg_hm.data[0])
+        return OrderedDict([('pos_hm', self._loss_pos_hm.item()),
+                            ('neg_hm', self._loss_neg_hm.item())
                             ])
 
     def get_current_scalars(self):
@@ -99,7 +103,7 @@ class ObjectDetectorNetModel(BaseModel):
         """
         Returns last model estimation with flag keep_estimation=True
         """
-        return self._estim_dict
+        return None
 
     def get_last_saved_visuals(self):
         """
@@ -143,6 +147,7 @@ class ObjectDetectorNetModel(BaseModel):
         self._net = NetworksFactory.get_by_name('prob_map_net')
         self._net.init_weights()
         self._net = self._move_net_to_gpu(self._net)
+        summary(self._net, (3, self._opt.net_image_size, self._opt.net_image_size))
 
     def _init_train_vars(self):
         # initialize learning rate
@@ -154,20 +159,20 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_prefetch_inputs(self):
         # prefetch gpu space for images
-        self._pos_input_img = self._Tensor(self._opt.batch_size, 3, self._opt.net_image_size, self._opt.net_image_size)
-        self._neg_input_img = self._Tensor(self._opt.batch_size, 3, self._opt.net_image_size, self._opt.net_image_size)
+        self._pos_input_img = torch.zeros([self._opt.batch_size, 3, self._opt.net_image_size, self._opt.net_image_size]).to(self._device)
+        self._neg_input_img = torch.zeros([self._opt.batch_size, 3, self._opt.net_image_size, self._opt.net_image_size]).to(self._device)
 
         # prefetch gpu space for poses
-        self._pos_input_hm = self._Tensor(self._opt.net_image_size, 1, self._opt.net_image_size, self._opt.net_image_size)
-        self._gt_neg_hm = Variable(torch.zeros(self._opt.batch_size, 1, self._opt.net_image_size, self._opt.net_image_size)).cuda()
+        self._pos_input_hm = torch.zeros([self._opt.net_image_size, 1, self._opt.net_image_size, self._opt.net_image_size]).to(self._device)
+        self._gt_neg_hm = torch.zeros([self._opt.batch_size, 1, self._opt.net_image_size, self._opt.net_image_size]).to(self._device)
 
     def _init_losses(self):
         # define loss functions
-        self._criterion_pos = torch.nn.MSELoss().cuda()  # mean square error
+        self._criterion_pos = torch.nn.MSELoss().to(self._device)  # mean square error
 
         # init losses value
-        self._loss_pos_hm = Variable(self._Tensor([0]))
-        self._loss_neg_hm = Variable(self._Tensor([0]))
+        self._loss_pos_hm = torch.zeros([0], requires_grad=True).to(self._device)
+        self._loss_neg_hm = torch.zeros([0], requires_grad=True).to(self._device)
 
     def _init_prefetch_create_hm_vars(self):
         # create hm grid
@@ -179,52 +184,47 @@ class ObjectDetectorNetModel(BaseModel):
         sigma = np.ones([1, 2]) * self._opt.poses_g_sigma
 
         # move to gpu, everything related to hm creation is moved to gpu 1 that has more free mem
-        self._grid = torch.from_numpy(grid).float().cuda(self._gpu_bb)
-        self._sigma = torch.from_numpy(sigma).float().cuda(self._gpu_bb)
+        self._grid = torch.from_numpy(grid).float().to(self._device)
+        self._sigma = torch.from_numpy(sigma).float().to(self._device)
         self._threshold_hm = torch.nn.Threshold(0.2, 0)
 
     # --- FORWARD HELPERS ---
 
     def _forward(self, keep_data_for_visuals, keep_estimation):
-        # get data
-        pos_imgs = Variable(self._pos_input_img, volatile=(not self._is_train))
-        neg_imgs = Variable(self._neg_input_img, volatile=(not self._is_train))
-        gt_hm = Variable(self._pos_input_hm, volatile=(not self._is_train))
+        with torch.set_grad_enabled(self._is_train):
+            # estim bb and prob
+            pos_hm = self._net(self._pos_input_img)
+            neg_hm = self._net(self._neg_input_img)
 
-        # estim bb and prob
-        pos_hm = self._net(pos_imgs)
-        neg_hm = self._net(neg_imgs)
+            # calculate losses
+            self._loss_pos_hm = self._criterion_pos(pos_hm, self._pos_input_hm) * self._opt.lambda_bb
+            self._loss_neg_hm = self._criterion_pos(neg_hm, self._gt_neg_hm) * self._opt.lambda_bb
 
-        # calculate losses
-        self._loss_pos_hm = self._criterion_pos(pos_hm, gt_hm) * self._opt.lambda_bb
-        self._loss_neg_hm = self._criterion_pos(neg_hm, self._gt_neg_hm) * self._opt.lambda_bb
+            # combined loss (move loss bb to gpu 0)
+            total_loss = self._loss_pos_hm + self._loss_neg_hm
 
-        # combined loss (move loss bb to gpu 0)
-        total_loss = self._loss_pos_hm + self._loss_neg_hm
+            # keep data for visualization
+            if keep_data_for_visuals:
+                # store visuals
+                self._keep_forward_data_for_visualization(self._pos_input_img, self._neg_input_img, pos_hm, neg_hm,
+                                                          self._pos_input_hm, self._gt_neg_hm)
 
-        # keep data for visualization
-        if keep_data_for_visuals:
-            # store visuals
-            self._keep_forward_data_for_visualization(pos_imgs, neg_imgs, pos_hm, neg_hm, gt_hm, self._gt_neg_hm)
-
-        # keep estimated data
-        if keep_estimation:
-            self._keep_estimation(pos_hm, neg_hm)
-            # self._keep_estimation(pos_hm)
-
+            # keep estimated data
+            if keep_estimation:
+                pass
 
         return total_loss
 
     def _keep_forward_data_for_visualization(self, pos_imgs, neg_imgs, pos_hm, neg_hm, gt_pos_hm, gt_neg_hm):
     # def _keep_forward_data_for_visualization(self, pos_imgs, pos_hm, gt_pos_hm):
         # store img data
-        self._vis_input_pos_img = util.tensor2im(pos_imgs.data)
-        self._vis_input_neg_img = util.tensor2im(neg_imgs.data)
+        self._vis_input_pos_img = util.tensor2im(pos_imgs.detach())
+        self._vis_input_neg_img = util.tensor2im(neg_imgs.detach())
 
-        self._vis_gt_pos_hm = gt_pos_hm.cpu().data[0, ...].numpy()
-        self._vis_gt_neg_hm = gt_neg_hm.cpu().data[0, ...].numpy()
-        self._vis_estim_pos_hm = pos_hm.cpu().data[0, ...].numpy()
-        self._vis_estim_neg_hm = neg_hm.cpu().data[0, ...].numpy()
+        self._vis_gt_pos_hm = gt_pos_hm.cpu().detach()[0, ...].numpy()
+        self._vis_gt_neg_hm = gt_neg_hm.cpu().detach()[0, ...].numpy()
+        self._vis_estim_pos_hm = pos_hm.cpu().detach()[0, ...].numpy()
+        self._vis_estim_neg_hm = neg_hm.cpu().detach()[0, ...].numpy()
 
     def _keep_estimation(self, estim_pos_bb_lowres, estim_pos_prob, estim_neg_prob):
         return None
@@ -242,23 +242,23 @@ class ObjectDetectorNetModel(BaseModel):
         :return:
         '''
         # prepare mu and sigma
-        mu = torch.clamp(mu, -1, 1)
-        mu = torch.unsqueeze(torch.unsqueeze(mu, -2), -2)
-        sigma = torch.unsqueeze(torch.unsqueeze(sigma, -2), -2)
+        mu = torch.Tensor.clamp(mu, -1, 1)
+        mu = torch.Tensor.unsqueeze(torch.Tensor.unsqueeze(mu, -2), -2)
+        sigma = torch.Tensor.unsqueeze(torch.Tensor.unsqueeze(sigma, -2), -2)
 
         # generate Gaussians
-        z = -torch.sum(torch.pow(grid - mu, 2) / (2 * torch.pow(sigma, 2)), dim=-1)
-        G = torch.exp(z)
-        G = G / torch.sum(torch.sum(G, dim=-1, keepdim=True), dim=-2, keepdim=True)
+        z = -torch.Tensor.sum(torch.Tensor.pow(grid - mu, 2) / (2 * torch.Tensor.pow(sigma, 2)), dim=-1)
+        G = torch.Tensor.exp(z)
+        G = G / torch.Tensor.sum(torch.Tensor.sum(G, dim=-1, keepdim=True), dim=-2, keepdim=True)
         return self._norm_hm(G)
 
     def _norm_hm(self, hm):
         # normalize hm (make every pixel between [0,1])
-        hm_min = torch.min(torch.min(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
-        hm_max = torch.max(torch.max(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
+        hm_min = torch.Tensor.min(torch.Tensor.min(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
+        hm_max = torch.Tensor.max(torch.Tensor.max(hm, -1, keepdim=True)[0], -2, keepdim=True)[0]
         return (hm - hm_min) / (hm_max - hm_min + 1e-8)
 
     def _get_max_pixel_activation(self, hm):
         # returns (u,v)
-        val, index = torch.max(hm.view(-1), 0)
+        val, index = torch.Tensor.max(hm.view(-1), 0)
         return index % self._opt.net_image_size, index / self._opt.net_image_size
