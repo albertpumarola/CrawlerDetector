@@ -68,12 +68,12 @@ class ObjectDetectorNetModel(BaseModel):
 
     def test(self, image, do_normalize_output=False):
         with torch.no_grad():
-            estim_hm = self._net(image)
+            estim_hm, estim_prob = self._net(image)
             if do_normalize_output:
                 estim_hm = self._norm_hm(self._threshold_hm(estim_hm))
             u_max, v_max = self._get_max_pixel_activation(estim_hm)
 
-        return estim_hm.detach().numpy(), (u_max.detach().numpy(), v_max.detach().numpy())
+        return estim_hm.detach().numpy(), (u_max.detach().numpy(), v_max.detach().numpy()), estim_prob.detach().numpy()
 
     def optimize_parameters(self):
         self._optimizer.step()
@@ -93,7 +93,8 @@ class ObjectDetectorNetModel(BaseModel):
 
     def get_current_errors(self):
         return OrderedDict([('pos_hm', self._loss_pos_hm.item()),
-                            ('neg_hm', self._loss_neg_hm.item())
+                            ('pos_prob', self._loss_pos_prob.item()),
+                            ('neg_prob', self._loss_neg_prob.item())
                             ])
 
     def get_current_scalars(self):
@@ -112,11 +113,15 @@ class ObjectDetectorNetModel(BaseModel):
         # visuals return dictionary
         visuals = OrderedDict()
         visuals['pos_gt_hm'] = plots.plot_overlay_attention(self._vis_input_pos_img, self._vis_gt_pos_hm[0, :, :],
-                                                            uv=(self._vis_gt_pos_hm_u_max, self._vis_gt_pos_hm_v_max))
+                                                            uv=(self._vis_gt_pos_hm_u_max, self._vis_gt_pos_hm_v_max),
+                                                            prob=self._vis_gt_pos_prob)
         visuals['pos_estim_hm'] = plots.plot_overlay_attention(self._vis_input_pos_img, self._vis_estim_pos_hm[0, :, :],
-                                                               uv=(self._vis_estim_pos_hm_u_max, self._vis_estim_pos_hm_v_max))
-        visuals['neg_gt_hm'] = plots.plot_overlay_attention(self._vis_input_neg_img, self._vis_gt_neg_hm[0, :, :])
-        visuals['neg_estim_hm'] = plots.plot_overlay_attention(self._vis_input_neg_img, self._vis_estim_neg_hm[0, :, :])
+                                                               uv=(self._vis_estim_pos_hm_u_max, self._vis_estim_pos_hm_v_max),
+                                                               prob=self._vis_estim_pos_prob)
+        visuals['neg_gt_hm'] = plots.plot_overlay_attention(self._vis_input_neg_img, self._vis_gt_neg_hm[0, :, :],
+                                                            prob=self._vis_gt_neg_prob)
+        visuals['neg_estim_hm'] = plots.plot_overlay_attention(self._vis_input_neg_img, self._vis_estim_neg_hm[0, :, :],
+                                                               prob=self._vis_estim_neg_prob)
         return visuals
 
     def save(self, label):
@@ -146,10 +151,12 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_create_networks(self):
         # features network
-        self._net = NetworksFactory.get_by_name('prob_map_net')
+        self._net = NetworksFactory.get_by_name('heat_map_net_prob')
         self._net.init_weights()
         self._net = self._move_net_to_gpu(self._net)
-        summary(self._net, (3, self._opt.net_image_size, self._opt.net_image_size))
+        # if self._is_train:
+        #     summary(self._net._heatmap_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
+        #     summary(self._net._prob_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
 
     def _init_train_vars(self):
         # initialize learning rate
@@ -168,13 +175,19 @@ class ObjectDetectorNetModel(BaseModel):
         self._pos_input_hm = torch.zeros([self._opt.net_image_size, 1, self._opt.net_image_size, self._opt.net_image_size]).to(self._device)
         self._gt_neg_hm = torch.zeros([self._opt.batch_size, 1, self._opt.net_image_size, self._opt.net_image_size]).to(self._device)
 
+        # prefetch gpu space for prob
+        self._gt_pos_prob = torch.unsqueeze(torch.ones(self._opt.batch_size), -1).to(self._device)
+        self._gt_neg_prob = torch.unsqueeze(torch.zeros(self._opt.batch_size), -1).to(self._device)
+
     def _init_losses(self):
         # define loss functions
-        self._criterion_pos = torch.nn.MSELoss().to(self._device)  # mean square error
+        self._criterion_pos = torch.nn.MSELoss().to(self._device)
+        self._criterion_prob = torch.nn.BCELoss().to(self._device)
 
         # init losses value
-        self._loss_pos_hm = torch.zeros([0], requires_grad=True).to(self._device)
-        self._loss_neg_hm = torch.zeros([0], requires_grad=True).to(self._device)
+        self._loss_pos_hm = torch.zeros(1, requires_grad=True).to(self._device)
+        self._loss_pos_prob = torch.zeros(1, requires_grad=True).to(self._device)
+        self._loss_neg_prob = torch.zeros(1, requires_grad=True).to(self._device)
 
     def _init_prefetch_create_hm_vars(self):
         # create hm grid
@@ -195,21 +208,23 @@ class ObjectDetectorNetModel(BaseModel):
     def _forward(self, keep_data_for_visuals, keep_estimation):
         with torch.set_grad_enabled(self._is_train):
             # estim bb and prob
-            pos_hm = self._net(self._pos_input_img)
-            neg_hm = self._net(self._neg_input_img)
+            pos_hm, pos_prob = self._net(self._pos_input_img)
+            neg_hm, neg_prob = self._net(self._neg_input_img)
 
             # calculate losses
             self._loss_pos_hm = self._criterion_pos(pos_hm, self._pos_input_hm) * self._opt.lambda_bb
-            self._loss_neg_hm = self._criterion_pos(neg_hm, self._gt_neg_hm) * self._opt.lambda_bb
+            self._loss_pos_prob = self._criterion_prob(pos_prob, self._gt_pos_prob) * self._opt.lambda_prob
+            self._loss_neg_prob = self._criterion_prob(neg_prob, self._gt_neg_prob) * self._opt.lambda_prob
 
             # combined loss (move loss bb to gpu 0)
-            total_loss = self._loss_pos_hm + self._loss_neg_hm
+            total_loss = self._loss_pos_hm + self._loss_pos_prob + self._loss_neg_prob
 
             # keep data for visualization
             if keep_data_for_visuals:
                 # store visuals
                 self._keep_forward_data_for_visualization(self._pos_input_img, self._neg_input_img, pos_hm, neg_hm,
-                                                          self._pos_input_hm, self._gt_neg_hm)
+                                                          self._pos_input_hm, self._gt_neg_hm, pos_prob, neg_prob,
+                                                          self._gt_pos_prob, self._gt_neg_prob)
 
             # keep estimated data
             if keep_estimation:
@@ -217,8 +232,8 @@ class ObjectDetectorNetModel(BaseModel):
 
         return total_loss
 
-    def _keep_forward_data_for_visualization(self, pos_imgs, neg_imgs, pos_hm, neg_hm, gt_pos_hm, gt_neg_hm):
-    # def _keep_forward_data_for_visualization(self, pos_imgs, pos_hm, gt_pos_hm):
+    def _keep_forward_data_for_visualization(self, pos_imgs, neg_imgs, pos_hm, neg_hm, gt_pos_hm, gt_neg_hm,
+                                             pos_prob, neg_prob, gt_pos_prob, gt_neg_prob):
         # store img data
         self._vis_input_pos_img = util.tensor2im(pos_imgs.detach())
         self._vis_input_neg_img = util.tensor2im(neg_imgs.detach())
@@ -227,6 +242,11 @@ class ObjectDetectorNetModel(BaseModel):
         self._vis_gt_neg_hm = gt_neg_hm.cpu().detach()[0, ...].numpy()
         self._vis_estim_pos_hm = pos_hm.cpu().detach()[0, ...].numpy()
         self._vis_estim_neg_hm = neg_hm.cpu().detach()[0, ...].numpy()
+
+        self._vis_gt_pos_prob = round(gt_pos_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_gt_neg_prob = round(gt_neg_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_estim_pos_prob = round(pos_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_estim_neg_prob = round(neg_prob.cpu().data[0, ...].numpy(), 2)
 
         gt_pos_hm_max = self._get_max_pixel_activation(gt_pos_hm)
         estim_pos_hm_max = self._get_max_pixel_activation(pos_hm)

@@ -16,11 +16,11 @@ class CrawlerDetector:
     def detect(self, frame, is_bgr=False, do_display_detection=False):
         # detect crawler
         crop_frame, frame_tensor = self._preprocess_frame(frame, is_bgr)
-        hm, uv_max, elapsed_time = self._detect_crawler(frame_tensor)
+        hm, uv_max, prob, elapsed_time = self._detect_crawler(frame_tensor)
 
         # display detection
         if do_display_detection:
-            self._display_hm(crop_frame, hm, uv_max, elapsed_time)
+            self._display_hm(crop_frame, hm, uv_max, prob, elapsed_time)
         return hm, uv_max
 
     def _preprocess_frame(self, frame, is_bgr):
@@ -30,7 +30,7 @@ class CrawlerDetector:
         # crop frame to network size
         crop_top = int((self._opt.image_size_h-self._opt.net_image_size)/2.0)
         crop_left = int((self._opt.image_size_w - self._opt.net_image_size) / 2.0)
-        crop_frame = frame[crop_left:crop_left+self._opt.net_image_size, crop_top:crop_top+self._opt.net_image_size]
+        crop_frame = frame[crop_top:crop_top+self._opt.net_image_size, crop_left:crop_left+self._opt.net_image_size]
 
         # convert to pytorch tensor and add batch dimension
         frame_tensor = crop_frame.copy()
@@ -43,9 +43,9 @@ class CrawlerDetector:
     def _detect_crawler(self, frame_tensor):
         # bb as (top, left, bottom, right)
         start_time = datetime.datetime.now()
-        hm, uv_max = self._model.test(frame_tensor, do_normalize_output=False)
+        hm, uv_max, prob = self._model.test(frame_tensor, do_normalize_output=False)
         elapsed_time = (datetime.datetime.now() - start_time).total_seconds()
-        return hm[0], uv_max, elapsed_time
+        return hm[0], uv_max, prob, elapsed_time
 
     def _display_bb(self, frame, bb, prob, elapsed_time):
         color = self._get_display_color(self._is_pos_detection(prob))
@@ -67,7 +67,7 @@ class CrawlerDetector:
         # display frame
         cv2.imshow('Crawler Detector BB', frame)
 
-    def _display_hm(self, frame, hm, uv_max, elapsed_time):
+    def _display_hm(self, frame, hm, uv_max, prob, elapsed_time):
         # display hm
         hm = (np.transpose(hm, (1, 2, 0)) * 255).astype(np.uint8)
         hm_img = cv2.applyColorMap(hm, cv2.COLORMAP_JET)
@@ -80,6 +80,9 @@ class CrawlerDetector:
         h, w, _ = frame.shape
         detection_time_txt = 'Detection Time[s]: %.3f' % elapsed_time
         cv2.putText(frame, detection_time_txt, (w - 200, h - 10), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
+
+        # prob
+        cv2.putText(frame, '%.2f' % prob, (w - 200, h - 30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
 
         # display frame
         cv2.imshow('Crawler Detector HM', frame)

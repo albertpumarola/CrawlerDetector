@@ -30,6 +30,9 @@ class NetworksFactory:
         elif network_name == 'prob_map_net':
             from .prob_map_net import ProbMapNet
             network = ProbMapNet(*args, **kwargs)
+        elif network_name == 'heat_map_net_prob':
+            from .heat_map_net_prob import HeatMapNetProb
+            network = HeatMapNetProb(*args, **kwargs)
         else:
             network = None
             raise ValueError("Network [%s] not recognized." % network_name)

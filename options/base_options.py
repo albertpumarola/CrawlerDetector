@@ -30,7 +30,7 @@ class BaseOptions():
         self._parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         self._parser.add_argument('--name', type=str, default='pretrained_model', help='name of the experiment. It decides where to store samples and models')
         self._parser.add_argument('--dataset_mode', type=str, default='object_hm', help='chooses how datasets are loaded. [object_bb]')
-        self._parser.add_argument('--model', type=str, default='object_detector_net_prob_map', help='chooses which model to use. [object_detector_net_model]')
+        self._parser.add_argument('--model', type=str, default='object_detector_net_prob_map2', help='chooses which model to use. [object_detector_net_model]')
         self._parser.add_argument('--n_threads_test', default=1, type=int, help='# threads for loading data')
         self._parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         self._parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')

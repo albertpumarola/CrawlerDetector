@@ -8,7 +8,7 @@ if __name__ == '__main__':
         # capture frame
         ret, frame = video_capture.read()
 
-        # frame = cv2.imread('/home/apumarola/datasets/Dataset-CrawlerDetection/selected_hm/pos/imgs/1519393652.030529.png')
+        # frame = cv2.imread('/home/apumarola/datasets/Dataset-CrawlerDetection/second/original/neg/imgs/title_2018-04-20-12-27-58.bag/color/1524220079.507493.png')
 
         # if frame correctly captured detect crawler
         if ret:

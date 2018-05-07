@@ -40,7 +40,7 @@ def plot_bb(img, pose, label=None, display_bb=True):
     return data
 
 def plot_overlay_attention(image, attention,
-                      alpha=0.3, cmap='jet'):
+                      alpha=0.3, cmap='jet', uv=None, prob=None):
     """
     input: image: HxWx3, attention: HxW
     usage:
@@ -58,6 +58,13 @@ def plot_overlay_attention(image, attention,
     #                     alpha=alpha, extent=[0, H, 0, W], vmin=np.min(attention), vmax=np.max(attention))
     heatmap = ax.imshow(attention, cmap=cmap,
                         alpha=alpha, extent=[0, H, 0, W], vmin=0, vmax=1)
+    if prob is not None:
+        ax.text(0.5, 0.9, prob, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,
+                color='red', fontsize=30)
+
+    if uv is not None:
+        x, y = uv[0], H-uv[1]
+        ax.add_patch(patches.Circle((x, y), 5, color='red'))
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)

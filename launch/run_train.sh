@@ -47,15 +47,42 @@
 #--nepochs_no_decay 10000 \
 #--nepochs_decay 50
 
-GPU=0
+#GPU=0
+#export CUDA_VISIBLE_DEVICES=$GPU
+## no pretrained weights
+#python train.py \
+#--name prob_map9 \
+#--model object_detector_net_prob_map \
+#--checkpoints_dir ./checkpoints \
+#--batch_size 120 \
+#--gpu_ids 0 \
+#--poses_g_sigma 0.12 \
+#--nepochs_no_decay 500 \
+#--nepochs_decay 100
+
+#GPU=1
+#export CUDA_VISIBLE_DEVICES=$GPU
+## no pretrained weights
+#python train.py \
+#--name prob_map10 \
+#--model object_detector_net_prob_map \
+#--checkpoints_dir ./checkpoints \
+#--batch_size 120 \
+#--gpu_ids 0 \
+#--poses_g_sigma 0.6 \
+#--nepochs_no_decay 500 \
+#--nepochs_decay 100
+
+
+GPU=1
 export CUDA_VISIBLE_DEVICES=$GPU
 # no pretrained weights
 python train.py \
---name prob_map9 \
---model object_detector_net_prob_map \
+--name prob_map11 \
+--model object_detector_net_prob_map2 \
 --checkpoints_dir ./checkpoints \
 --batch_size 120 \
 --gpu_ids 0 \
---poses_g_sigma 0.12 \
+--poses_g_sigma 0.6 \
 --nepochs_no_decay 500 \
 --nepochs_decay 100

@@ -45,7 +45,7 @@ class ObjectHMDataset(DatasetBase):
 
         # augment data
         pos_img, pos_hm = self._augment_data(pos_img, pos_hm)
-        neg_img, _ = self._crop(neg_img, None)
+        neg_img, _ = self._augment_data(neg_img, None)
 
         # transform data
         pos_img = self._transform(pos_img)
