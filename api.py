@@ -67,9 +67,11 @@ class CrawlerDetector:
         # display frame
         cv2.imshow('Crawler Detector BB', frame)
 
-    def _display_hm(self, frame, hm, uv_max, prob, elapsed_time):
+    def _display_hm(self, frame, hm, uv_max, prob, elapsed_time, prob_threshold=0.5):
         # display hm
         hm = (np.transpose(hm, (1, 2, 0)) * 255).astype(np.uint8)
+        if prob is not None and prob < prob_threshold:
+            hm = np.ones(hm.shape, dtype=hm.dtype)
         hm_img = cv2.applyColorMap(hm, cv2.COLORMAP_JET)
         frame = cv2.addWeighted(frame, 0.7, hm_img, 0.3, 0)
 

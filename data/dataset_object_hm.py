@@ -127,7 +127,7 @@ class ObjectHMDataset(DatasetBase):
         return (hm.astype(np.float32) / self._opt.net_image_size - 0.5) * 2.
 
     def _augment_data(self, img, hm):
-        aug_type = random.choice(['', 'h', 'v', 'hv']) if hm is not None else None
+        aug_type = random.choice(['', 'h', 'v', 'hv'])
         if aug_type == 'v':
             img = cv2.flip(img, 1)
         elif aug_type == 'h':

@@ -66,7 +66,7 @@ class HeatMapNetProb(NetworkBase):
 
         layers.append(nn.Conv2d(conv_dim * 4, conv_dim * 4, kernel_size=4, stride=1, padding=0, bias=False))
         layers.append(nn.Conv2d(conv_dim * 4, 1, kernel_size=1, stride=1, padding=0, bias=False))
-        layers.append(nn.Sigmoid())
+        # layers.append(nn.Sigmoid())
         return nn.Sequential(*layers)
 
     def forward(self, x):

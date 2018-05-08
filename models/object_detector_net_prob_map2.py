@@ -151,12 +151,12 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_create_networks(self):
         # features network
-        self._net = NetworksFactory.get_by_name('heat_map_net_prob')
+        self._net = NetworksFactory.get_by_name('heat_map_net_prob', conv_dim=8)
         self._net.init_weights()
         self._net = self._move_net_to_gpu(self._net)
-        # if self._is_train:
-        #     summary(self._net._heatmap_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
-        #     summary(self._net._prob_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
+        if len(self._gpu_ids) > 0:
+            summary(self._net._heatmap_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
+            summary(self._net._prob_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
 
     def _init_train_vars(self):
         # initialize learning rate
@@ -182,7 +182,7 @@ class ObjectDetectorNetModel(BaseModel):
     def _init_losses(self):
         # define loss functions
         self._criterion_pos = torch.nn.MSELoss().to(self._device)
-        self._criterion_prob = torch.nn.BCELoss().to(self._device)
+        self._criterion_prob = torch.nn.BCEWithLogitsLoss().to(self._device)
 
         # init losses value
         self._loss_pos_hm = torch.zeros(1, requires_grad=True).to(self._device)

@@ -73,7 +73,7 @@ class ObjectDetectorNetModel(BaseModel):
                 estim_hm = self._norm_hm(self._threshold_hm(estim_hm))
             u_max, v_max = self._get_max_pixel_activation(estim_hm)
 
-        return estim_hm.detach().numpy(), (u_max.detach().numpy(), v_max.detach().numpy())
+        return estim_hm.detach().numpy(), (u_max.detach().numpy(), v_max.detach().numpy()), None
 
     def optimize_parameters(self):
         self._optimizer.step()
