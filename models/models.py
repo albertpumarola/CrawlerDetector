@@ -23,6 +23,9 @@ class ModelsFactory:
         elif model_name == 'object_detector_net_prob_map2':
             from .object_detector_net_prob_map2 import ObjectDetectorNetModel
             model = ObjectDetectorNetModel(opt)
+        elif model_name == 'object_detector_net_prob':
+            from .object_detector_net_prob import ObjectDetectorNetModel
+            model = ObjectDetectorNetModel(opt)
         else:
             raise ValueError("Model [%s] not recognized." % opt.model)
 

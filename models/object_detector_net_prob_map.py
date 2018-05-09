@@ -146,10 +146,11 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_create_networks(self):
         # features network
-        self._net = NetworksFactory.get_by_name('prob_map_net')
+        self._net = NetworksFactory.get_by_name('prob_map_net3', conv_dim=16)
         self._net.init_weights()
         self._net = self._move_net_to_gpu(self._net)
-        summary(self._net, (3, self._opt.net_image_size, self._opt.net_image_size))
+        if len(self._gpu_ids) > 0:
+            summary(self._net, (3, self._opt.net_image_size, self._opt.net_image_size))
 
     def _init_train_vars(self):
         # initialize learning rate
