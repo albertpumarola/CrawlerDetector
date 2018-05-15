@@ -169,8 +169,8 @@ class ObjectDetectorNetModel(BaseModel):
 
     def _init_losses(self):
         # define loss functions
-        # self._criterion_pos = torch.nn.SmoothL1Loss().to(self._device)
-        self._criterion_pos = torch.nn.MSELoss().to(self._device)
+        self._criterion_pos = torch.nn.SmoothL1Loss().to(self._device)
+        # self._criterion_pos = torch.nn.MSELoss().to(self._device)
         self._criterion_prob = torch.nn.BCEWithLogitsLoss().to(self._device)
 
         # init losses value

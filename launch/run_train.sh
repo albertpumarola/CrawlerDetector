@@ -191,8 +191,8 @@
 #--gpu_ids 0 \
 #--lambda_prob 100 \
 #--poses_g_sigma 0.6 \
-#--nepochs_no_decay 500 \
-#--nepochs_decay 100
+#--nepochs_no_decay 400 \
+#--nepochs_decay 200
 
 ##uv_prob_net2 32
 #GPU=1
@@ -208,6 +208,22 @@
 #--poses_g_sigma 0.6 \
 #--nepochs_no_decay 500 \
 #--nepochs_decay 100
+
+#uv_prob_net2 32
+GPU=1
+export CUDA_VISIBLE_DEVICES=$GPU
+# no pretrained weights
+python train.py \
+--name object_detector_net_prob3 \
+--model object_detector_net_prob \
+--checkpoints_dir ./checkpoints/object_detector_net_prob/ \
+--batch_size 120 \
+--gpu_ids 0 \
+--lambda_prob 100 \
+--poses_g_sigma 0.6 \
+--lr 0.0001 \
+--nepochs_no_decay 800 \
+--nepochs_decay 200
 
 
 ##3 with batchnorm
@@ -225,17 +241,17 @@
 #--nepochs_no_decay 500 \
 #--nepochs_decay 100
 #
-#2 with mse
-GPU=0
-export CUDA_VISIBLE_DEVICES=$GPU
-# no pretrained weights
-python train.py \
---name object_detector_net_prob5 \
---model object_detector_net_prob \
---checkpoints_dir ./checkpoints/object_detector_net_prob/ \
---batch_size 60 \
---gpu_ids 0 \
---lambda_prob 100 \
---poses_g_sigma 0.6 \
---nepochs_no_decay 500 \
---nepochs_decay 100
+##2 with mse
+#GPU=0
+#export CUDA_VISIBLE_DEVICES=$GPU
+## no pretrained weights
+#python train.py \
+#--name object_detector_net_prob5 \
+#--model object_detector_net_prob \
+#--checkpoints_dir ./checkpoints/object_detector_net_prob/ \
+#--batch_size 60 \
+#--gpu_ids 0 \
+#--lambda_prob 100 \
+#--poses_g_sigma 0.6 \
+#--nepochs_no_decay 500 \
+#--nepochs_decay 100

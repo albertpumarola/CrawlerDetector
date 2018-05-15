@@ -7,7 +7,11 @@ from models.models import ModelsFactory
 import numpy as np
 
 class CrawlerDetector:
-    def __init__(self):
+    def __init__(self, prob_threshold = 0.5, do_filter_prob=True):
+        self._prob_treshold = prob_threshold
+        self._do_filter_prob = do_filter_prob
+        self._detected_in_previous_frame = False
+
         self._opt = TestOptions().parse()  # parse model parameters
         self._img2tensor = self._create_img_transform()  # map RGB cv2 image to Pytorch tensor
         self._model = ModelsFactory.get_by_name(self._opt.model, self._opt)  # get model
@@ -18,10 +22,17 @@ class CrawlerDetector:
         crop_frame, frame_tensor = self._preprocess_frame(frame, is_bgr)
         hm, uv_max, prob, elapsed_time = self._detect_crawler(frame_tensor)
 
+        # filter prob
+        final_prob = self._filter_prob(prob) if self._do_filter_prob else prob
+
         # display detection
         if do_display_detection:
-            # self._display_hm(crop_frame, hm, uv_max, prob, elapsed_time)
-            self._display_center(crop_frame, uv_max, prob, elapsed_time)
+            self._display_center(crop_frame, uv_max, final_prob, elapsed_time)
+
+        # update prob filter
+        if self._do_filter_prob:
+            self._update_prob_filter(prob)
+
         return hm, uv_max
 
     def _preprocess_frame(self, frame, is_bgr):
@@ -93,12 +104,13 @@ class CrawlerDetector:
         # display frame
         cv2.imshow('Crawler Detector HM', frame)
 
-    def _display_center(self, frame, uv_max, prob, elapsed_time, prob_threshold=0.5):
+    def _display_center(self, frame, uv_max, prob, elapsed_time):
         h, w, _ = frame.shape
         detection_time_txt = 'Detection Time[s]: %.3f' % elapsed_time
         cv2.putText(frame, detection_time_txt, (w - 200, h - 10), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
 
-        frame = cv2.circle(frame, (uv_max[1], uv_max[0]), 3, (255, 255, 0))
+        if prob is not None and prob >= self._prob_treshold:
+            frame = cv2.circle(frame, (uv_max[1], uv_max[0]), 3, (0, 0, 255), -1)
 
         # prob
         if prob is not None:
@@ -109,8 +121,7 @@ class CrawlerDetector:
 
     def _create_img_transform(self):
         transform_list = [transforms.ToTensor(),
-                          transforms.Normalize(mean=[0.5, 0.5, 0.5],
-                                               std=[0.5, 0.5, 0.5])]
+                          transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
         return transforms.Compose(transform_list)
 
     def _is_pos_detection(self, prob):
@@ -118,3 +129,12 @@ class CrawlerDetector:
 
     def _get_display_color(self, is_pos=True):
         return (0, 255, 0) if is_pos else (0, 0, 255)
+
+    def _filter_prob(self, prob):
+        if prob >= self._prob_treshold:
+            return prob if self._detected_in_previous_frame else -1
+        else:
+            return prob
+
+    def _update_prob_filter(self, prob):
+        self._detected_in_previous_frame = prob >= self._prob_treshold

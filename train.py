@@ -49,8 +49,13 @@ class Train:
     def _train_epoch(self, i_epoch):
         epoch_iter = 0
         self._model.set_train()
+        iter_start_time = time.time()
+        iter_read_time = 0
+        iter_procs_time = 0
+        num_iters_time = 0
         for i_train_batch, train_batch in enumerate(self._dataset_train):
-            iter_start_time = time.time()
+            iter_read_time += (time.time() - iter_start_time) / self._opt.batch_size
+            iter_after_read_time = time.time()
 
             # display flags
             do_visuals = self._last_display_time is None or time.time() - self._last_display_time > self._opt.display_freq_s
@@ -64,11 +69,18 @@ class Train:
             # update epoch info
             self._total_steps += self._opt.batch_size
             epoch_iter += self._opt.batch_size
+            iter_procs_time += (time.time() - iter_after_read_time) / self._opt.batch_size
+            num_iters_time += 1
 
             # display terminal
             if do_print_terminal:
-                self._display_terminal(iter_start_time, i_epoch, i_train_batch, do_visuals)
+                iter_read_time /= num_iters_time
+                iter_procs_time /= num_iters_time
+                self._display_terminal(iter_read_time, iter_procs_time, i_epoch, i_train_batch, do_visuals)
                 self._last_print_time = time.time()
+                iter_read_time = 0
+                iter_procs_time = 0
+                num_iters_time = 0
 
             # display visualizer
             if do_visuals:
@@ -82,10 +94,11 @@ class Train:
                 self._model.save(i_epoch)
                 self._last_save_latest_time = time.time()
 
-    def _display_terminal(self, iter_start_time, i_epoch, i_train_batch, visuals_flag):
+            iter_start_time = time.time()
+
+    def _display_terminal(self, iter_read_time, iter_procs_time, i_epoch, i_train_batch, visuals_flag):
         errors = self._model.get_current_errors()
-        t = (time.time() - iter_start_time) / self._opt.batch_size
-        self._tb_visualizer.print_current_train_errors(i_epoch, i_train_batch, self._iters_per_epoch, errors, t, visuals_flag)
+        self._tb_visualizer.print_current_train_errors(i_epoch, i_train_batch, self._iters_per_epoch, errors, iter_read_time, iter_procs_time, visuals_flag)
 
     def _display_visualizer_train(self, total_steps):
         self._tb_visualizer.display_current_results(self._model.get_last_saved_visuals(), total_steps, is_train=True)
