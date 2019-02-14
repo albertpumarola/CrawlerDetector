@@ -8,8 +8,8 @@ import xml.etree.ElementTree as ET
 import pickle
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input_hms_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/test/hms/', help='Input hms directory')
-parser.add_argument('-o', '--output_hms_dir', type=str, default='/home/apumarola/datasets/Dataset-CrawlerDetection/second/processed/test/', help='Output hms directory')
+parser.add_argument('-i', '--input_hms_dir', type=str, default='/home/lab/Documents/aeroarms_dataset_processed/pos/labels', help='Input hms directory')
+parser.add_argument('-o', '--output_hms_dir', type=str, default='/home/lab/Documents/aeroarms_dataset_processed/pos', help='Output hms directory')
 args = parser.parse_args()
 
 
