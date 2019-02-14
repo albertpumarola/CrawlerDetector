@@ -6,3 +6,4 @@
 3. Run `resize_dataset.py`
 4. Label Bounding Boxes with [labelImg](https://github.com/tzutalin/labelImg)
 5. Run `extract_hms_labelImg.py`
+6. Run `split_train_test_hm.py`
