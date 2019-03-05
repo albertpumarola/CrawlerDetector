@@ -122,7 +122,7 @@ class Train:
             errors = self._model.get_current_errors()
 
             # store current batch errors
-            for k, v in errors.iteritems():
+            for k, v in errors.items():
                 if k in val_errors:
                     val_errors[k] += v
                 else:
@@ -131,7 +131,7 @@ class Train:
             break
 
         # normalize errors
-        for k in val_errors.iterkeys():
+        for k in val_errors.keys():
             val_errors[k] /= (i_val_batch+1)
 
         # visualize

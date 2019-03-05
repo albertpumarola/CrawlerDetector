@@ -37,7 +37,7 @@ class ObjectHMDataset(DatasetBase):
             pos_hm = self._get_hm_by_id(sample_id)
 
             if pos_img is None:
-                print 'error reading %s, skipping sample' % sample_id
+                print ('error reading %s, skipping sample' % sample_id)
 
         # neg data
         neg_index = random.randint(0, self._neg_dataset_size - 1)
@@ -63,7 +63,7 @@ class ObjectHMDataset(DatasetBase):
                   }
 
         if pos_norm_hm.dtype != 'float32':
-            print pos_norm_hm.dtype, pos_norm_hm
+            print (pos_norm_hm.dtype, pos_norm_hm)
 
         return sample
 
@@ -113,7 +113,6 @@ class ObjectHMDataset(DatasetBase):
         '''
         Read file with all gt hms
         :param path: File data must have shape dataset_size x 2*num_points (being num_points = 2)
-        :return: Bounding Boxes represented with top-left and right-bottom coords (dataset_size x num_points x 2)
         '''
         with open(path, 'rb') as f:
             return pickle.load(f)

@@ -106,9 +106,9 @@ class BaseModel(object):
         load_path = os.path.join(self._save_dir, load_filename)
         if os.path.exists(load_path):
             optimizer.load_state_dict(torch.load(load_path))
-            print 'loaded optimizer: %s' % load_path
+            print ('loaded optimizer: %s' % load_path)
         else:
-            print 'NOT!! loaded optimizer: %s' % load_path
+            print ('NOT!! loaded optimizer: %s' % load_path)
 
     def _save_network(self, network, network_label, epoch_label):
         save_filename = 'net_epoch_%s_id_%s.pth' % (epoch_label, network_label)
@@ -120,9 +120,9 @@ class BaseModel(object):
         load_path = os.path.join(self._save_dir, load_filename)
         if os.path.exists(load_path):
             network.load_state_dict(torch.load(load_path))
-            print 'loaded net: %s' % load_path
+            print ('loaded net: %s' % load_path)
         else:
-            print 'NOT!! loaded net: %s' % load_path
+            print ('NOT!! loaded net: %s' % load_path)
 
     def _move_net_to_gpu(self, net, output_gpu=0):
         if len(self._gpu_ids) > 1:

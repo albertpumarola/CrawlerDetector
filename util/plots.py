@@ -1,8 +1,10 @@
 from __future__ import print_function
-import numpy as np
-import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.patches as patches
+import numpy as np
+import PIL.Image
+import matplotlib.pyplot as plt
+import io
 
 def plot_bb(img, pose, label=None, display_bb=True):
     '''
@@ -94,8 +96,13 @@ def plot_center(image, uv, prob=None):
         ax.text(0.5, 0.9, prob, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,
                 color='red', fontsize=30)
 
-    fig.canvas.draw()
-    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-    plt.close(fig)
-    return data
+    buf = io.BytesIO()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    plt.savefig(buf, format='jpeg', facecolor='#AAAAAA')
+    buf.seek(0)
+    plt.close()
+    return io_to_numpy(buf)
+
+
+def io_to_numpy(fig):
+    return np.transpose(np.array(PIL.Image.open(fig)), (2, 0, 1))

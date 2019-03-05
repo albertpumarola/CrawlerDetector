@@ -6,11 +6,11 @@ from collections import OrderedDict
 # from CrawlerDetector.networks.networks import NetworksFactory
 import util.util as util
 import util.plots as plots
-from models import BaseModel
-# from models.models import BaseModel
+# from models import BaseModel
+from models.models import BaseModel
 from networks.networks import NetworksFactory
 import numpy as np
-from torchsummary import summary
+# from torchsummary import summary
 
 class ObjectDetectorNetModel(BaseModel):
     def __init__(self, opt):
@@ -141,10 +141,9 @@ class ObjectDetectorNetModel(BaseModel):
     def _init_create_networks(self):
         # features network
         self._net = NetworksFactory.get_by_name('uv_prob_net2', num_nc=32)
-        self._net.init_weights()
         self._net = self._move_net_to_gpu(self._net)
-        if len(self._gpu_ids) > 0:
-            summary(self._net, (3, self._opt.net_image_size, self._opt.net_image_size))
+        # if len(self._gpu_ids) > 0:
+        #     summary(self._net, (3, self._opt.net_image_size, self._opt.net_image_size))
         #     summary(self._net._prob_reg, (3, self._opt.net_image_size, self._opt.net_image_size))
 
     def _init_train_vars(self):
@@ -217,10 +216,10 @@ class ObjectDetectorNetModel(BaseModel):
         self._vis_estim_pos_p = self._unormalize_pose(pos_p.cpu().detach()[0, ...].numpy())
         self._vis_estim_neg_p = self._unormalize_pose(neg_p.cpu().detach()[0, ...].numpy())
 
-        self._vis_gt_pos_prob = round(gt_pos_prob.cpu().data[0, ...].numpy(), 2)
-        self._vis_gt_neg_prob = round(gt_neg_prob.cpu().data[0, ...].numpy(), 2)
-        self._vis_estim_pos_prob = round(pos_prob.cpu().data[0, ...].numpy(), 2)
-        self._vis_estim_neg_prob = round(neg_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_gt_pos_prob = np.around(gt_pos_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_gt_neg_prob = np.around(gt_neg_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_estim_pos_prob = np.around(pos_prob.cpu().data[0, ...].numpy(), 2)
+        self._vis_estim_neg_prob = np.around(neg_prob.cpu().data[0, ...].numpy(), 2)
 
     def _keep_estimation(self, estim_pos_bb_lowres, estim_pos_prob, estim_neg_prob):
         return None

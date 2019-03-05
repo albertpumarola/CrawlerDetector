@@ -1,6 +1,7 @@
 import torch.nn as nn
 import functools
 import torch
+from torch.nn import init
 
 class NetworksFactory:
     def __init__(self):
@@ -67,18 +68,27 @@ class NetworkBase(nn.Module):
     def name(self):
         return self._name
 
-    def init_weights(self):
-        self.apply(self._weights_init_fn)
+    def init_weights(self, net, init_type='normal', gain=0.02):
+        def init_func(m):
+            classname = m.__class__.__name__
+            if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+                if init_type == 'normal':
+                    init.normal_(m.weight.data, 0.0, gain)
+                elif init_type == 'xavier':
+                    init.xavier_normal_(m.weight.data, gain=gain)
+                elif init_type == 'kaiming':
+                    init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
+                elif init_type == 'orthogonal':
+                    init.orthogonal_(m.weight.data, gain=gain)
+                else:
+                    raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
+                if hasattr(m, 'bias') and m.bias is not None:
+                    init.constant_(m.bias.data, 0.0)
+            elif classname.find('BatchNorm2d') != -1:
+                init.normal_(m.weight.data, 1.0, gain)
+                init.constant_(m.bias.data, 0.0)
 
-    def _weights_init_fn(self, m):
-        classname = m.__class__.__name__
-        if classname.find('Conv') != -1:
-            m.weight.data.normal_(0.0, 0.02)
-            if hasattr(m.bias, 'data'):
-                m.bias.data.fill_(0)
-        elif classname.find('BatchNorm2d') != -1:
-            m.weight.data.normal_(1.0, 0.02)
-            m.bias.data.fill_(0)
+        net.apply(init_func)
 
     def _set_requires_grads(self, net, requires_grads=True):
         if not requires_grads:
