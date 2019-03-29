@@ -225,11 +225,24 @@ export CUDA_VISIBLE_DEVICES=$GPU
 #--nepochs_no_decay 800 \
 #--nepochs_decay 200
 
+#python train.py \
+#--name object_detector_net_prob3_4 \
+#--model object_detector_net_prob \
+#--checkpoints_dir ./checkpoints/object_detector_net_prob/ \
+#--batch_size 5 \
+#--gpu_ids 0 \
+#--lambda_prob 100 \
+#--poses_g_sigma 0.6 \
+#--lr 0.0001 \
+#--nepochs_no_decay 300 \
+#--nepochs_decay 200
+
+
 python train.py \
---name object_detector_net_prob3_3 \
---model object_detector_net_prob \
---checkpoints_dir ./checkpoints/object_detector_net_prob/ \
---batch_size 5 \
+--name object_detector_net_unet_3 \
+--model object_detector_unet \
+--checkpoints_dir ./checkpoints/object_detector_unet/ \
+--batch_size 10 \
 --gpu_ids 0 \
 --lambda_prob 100 \
 --poses_g_sigma 0.6 \

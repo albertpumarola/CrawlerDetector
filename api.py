@@ -7,7 +7,7 @@ from models.models import ModelsFactory
 import numpy as np
 
 class CrawlerDetector:
-    def __init__(self, prob_threshold = 0.5, do_filter_prob=True):
+    def __init__(self, prob_threshold=0.7, do_filter_prob=True):
         self._prob_treshold = prob_threshold
         self._do_filter_prob = do_filter_prob
         self._detected_in_previous_frame = False
@@ -27,7 +27,8 @@ class CrawlerDetector:
 
         # display detection
         if do_display_detection:
-            self._display_center(crop_frame, uv_max, final_prob, elapsed_time)
+            # self._display_center(crop_frame, uv_max, final_prob, elapsed_time)
+            self._display_hm(crop_frame, hm, uv_max, final_prob, elapsed_time, prob_threshold=0.5)
 
         # update prob filter
         if self._do_filter_prob:
@@ -82,24 +83,27 @@ class CrawlerDetector:
         cv2.imshow('Crawler Detector BB', frame)
 
     def _display_hm(self, frame, hm, uv_max, prob, elapsed_time, prob_threshold=0.5):
+
+        if prob is not None and prob < self._prob_treshold:
+            hm = np.ones_like(hm)*0.001
+
         # display hm
         hm = (np.transpose(hm, (1, 2, 0)) * 255).astype(np.uint8)
-        # if prob is not None and prob < prob_threshold:
-        #     hm = np.ones(hm.shape, dtype=hm.dtype)
+        hm = np.clip(hm, 0, 255)
+
         hm_img = cv2.applyColorMap(hm, cv2.COLORMAP_JET)
         frame = cv2.addWeighted(frame, 0.7, hm_img, 0.3, 0)
-
         #display uv_max
         # frame = cv2.circle(frame, uv_max, 3, (255, 255, 0))
 
         # display detection time
         h, w, _ = frame.shape
         detection_time_txt = 'Detection Time[s]: %.3f' % elapsed_time
-        cv2.putText(frame, detection_time_txt, (w - 200, h - 10), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
+        cv2.putText(frame, detection_time_txt, (w - 128, h - 5), cv2.FONT_HERSHEY_DUPLEX, 0.3, (255, 255, 0), 1)
 
         # prob
         if prob is not None:
-            cv2.putText(frame, '%.2f' % prob, (w - 200, h - 30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
+            cv2.putText(frame, 'prob: %.2f' % prob, (w - 128, h - 20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
 
         # display frame
         cv2.imshow('Crawler Detector HM', frame)
@@ -132,7 +136,7 @@ class CrawlerDetector:
 
     def _filter_prob(self, prob):
         if prob >= self._prob_treshold:
-            return prob if self._detected_in_previous_frame else -1
+            return prob if self._detected_in_previous_frame else 0.001
         else:
             return prob
 
