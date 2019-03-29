@@ -239,7 +239,7 @@ export CUDA_VISIBLE_DEVICES=$GPU
 
 
 python train.py \
---name object_detector_net_unet_3 \
+--name object_detector_net_unet_7 \
 --model object_detector_unet \
 --checkpoints_dir ./checkpoints/object_detector_unet/ \
 --batch_size 10 \

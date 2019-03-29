@@ -119,7 +119,7 @@ class ObjectHMDataset(DatasetBase):
 
     def _create_transform(self):
         transform_list = [transforms.ToPILImage(),
-                          transforms.ColorJitter(brightness=.2, contrast=.2, saturation=.2, hue=.05),
+                          transforms.ColorJitter(brightness=.4, contrast=.4, saturation=.4, hue=.05),
                           transforms.ToTensor(),
                           transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
         self._transform = transforms.Compose(transform_list)

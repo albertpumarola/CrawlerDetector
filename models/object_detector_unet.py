@@ -151,7 +151,7 @@ class ObjectDetectorNetModel(BaseModel):
 
         # initialize optimizers
         self._optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self._net.parameters()),
-                                           lr=self._current_lr)
+                                           lr=self._current_lr, weight_decay=1e-5)
 
     def _init_losses(self):
         # define loss functions

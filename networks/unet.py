@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 
 class UNet(NetworkBase):
-    def __init__(self, input_nc=3, output_nc=1, max_nc=512, min_nc=32, inplace=True, norm_type="instance"):
+    def __init__(self, input_nc=3, output_nc=1, max_nc=512, min_nc=32, inplace=True, norm_type="batch"):
         super(UNet, self).__init__()
 
         norm_layer = self._get_norm_layer(norm_type)

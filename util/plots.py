@@ -1,4 +1,6 @@
 from __future__ import print_function
+import matplotlib
+matplotlib.use('Agg')
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.patches as patches
 import numpy as np
