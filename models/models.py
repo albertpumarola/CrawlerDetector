@@ -26,6 +26,9 @@ class ModelsFactory:
         elif model_name == 'object_detector_net_prob':
             from .object_detector_net_prob import ObjectDetectorNetModel
             model = ObjectDetectorNetModel(opt)
+        elif model_name == 'object_detector_unet':
+            from .object_detector_unet import ObjectDetectorNetModel
+            model = ObjectDetectorNetModel(opt)
         else:
             raise ValueError("Model [%s] not recognized." % opt.model)
 
@@ -118,15 +121,34 @@ class BaseModel(object):
     def _load_network(self, network, network_label, epoch_label):
         load_filename = 'net_epoch_%s_id_%s.pth' % (epoch_label, network_label)
         load_path = os.path.join(self._save_dir, load_filename)
+
         if os.path.exists(load_path):
-            network.load_state_dict(torch.load(load_path))
-            print ('loaded net: %s' % load_path)
+            loaded_model = torch.load(load_path, map_location=lambda storage, loc: storage)
+            if isinstance(network, torch.nn.parallel.DataParallel) and 'module.' in list(loaded_model.keys())[0]:
+                network.load_state_dict(loaded_model)
+            elif isinstance(network, torch.nn.parallel.DataParallel) and 'module.' not in list(loaded_model.keys())[0]:
+                new_state_dict = OrderedDict()
+                for k, v in loaded_model.items():
+                    name = 'module.' + k  # add `module.`
+                    new_state_dict[name] = v
+                network.load_state_dict(new_state_dict)
+            else:
+                if 'module.' in list(loaded_model.keys())[0]:
+                    new_state_dict = OrderedDict()
+                    for k, v in loaded_model.items():
+                        name = k[7:]  # remove `module.`
+                        new_state_dict[name] = v
+                else:
+                    new_state_dict = loaded_model
+
+                network.load_state_dict(new_state_dict)
+            print('loaded net: %s' % load_path)
         else:
-            print ('NOT!! loaded net: %s' % load_path)
+            print('NOT!! loaded net: %s' % load_path)
 
     def _move_net_to_gpu(self, net, output_gpu=0):
         if len(self._gpu_ids) > 1:
-            return torch.nn.DataParallel(net, device_ids=self._gpu_ids, output_device=output_gpu).to(self._device)
+            return torch.nn.DataParallel(net, device_ids=self._gpu_ids).to(self._device)
         elif len(self._gpu_ids) == 1:
             return net.to(self._device)
         else:

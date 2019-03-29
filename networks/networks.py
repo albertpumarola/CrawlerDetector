@@ -52,6 +52,9 @@ class NetworksFactory:
         elif network_name == 'uv_prob_net2':
             from .uv_prob_net2 import uvProbNet
             network = uvProbNet(*args, **kwargs)
+        elif network_name == 'unet':
+            from .unet import UNet
+            network = UNet(*args, **kwargs)
         else:
             network = None
             raise ValueError("Network [%s] not recognized." % network_name)
@@ -94,3 +97,15 @@ class NetworkBase(nn.Module):
         if not requires_grads:
             for param in net.parameters():
                 param.requires_grad = False
+
+    def _get_norm_layer(self, norm_type='batch'):
+        if norm_type == 'batch':
+            norm_layer = nn.BatchNorm2d
+        elif norm_type == 'instance':
+            norm_layer = nn.InstanceNorm2d
+        elif norm_type == 'none':
+            norm_layer = None
+        else:
+            raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
+
+        return norm_layer

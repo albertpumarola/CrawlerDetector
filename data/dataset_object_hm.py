@@ -118,12 +118,14 @@ class ObjectHMDataset(DatasetBase):
             return pickle.load(f)
 
     def _create_transform(self):
-        transform_list = [transforms.ToTensor(),
+        transform_list = [transforms.ToPILImage(),
+                          transforms.ColorJitter(brightness=.2, contrast=.2, saturation=.2, hue=.05),
+                          transforms.ToTensor(),
                           transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
         self._transform = transforms.Compose(transform_list)
 
     def _normalize_hm(self, hm):
-        return (hm.astype(np.float32) / self._opt.net_image_size - 0.5) * 2.
+        return (hm.astype(np.float32) / (self._opt.net_image_size-1) - 0.5) * 2.
 
     def _augment_data(self, img, hm):
         aug_type = random.choice(['', 'h', 'v', 'hv'])

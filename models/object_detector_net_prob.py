@@ -7,7 +7,7 @@ from collections import OrderedDict
 import util.util as util
 import util.plots as plots
 # from models import BaseModel
-from models.models import BaseModel
+from .models import BaseModel
 from networks.networks import NetworksFactory
 import numpy as np
 # from torchsummary import summary

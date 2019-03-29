@@ -104,5 +104,22 @@ def plot_center(image, uv, prob=None):
     return io_to_numpy(buf)
 
 
+def plot_hm(image, hm_ij, alpha=0.3, cmap='jet'):
+    """
+    image: HxWx3,
+    hm: HxW (coords ij)
+    """
+
+    fig = plt.figure()
+    plt.imshow(image)
+    plt.imshow(hm_ij, cmap=cmap, alpha=alpha, vmin=0, vmax=1)  # it requires ij
+
+    buf = io.BytesIO()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    plt.savefig(buf, format='jpeg', facecolor='#AAAAAA')
+    buf.seek(0)
+    plt.close()
+    return io_to_numpy(buf)
+
 def io_to_numpy(fig):
     return np.transpose(np.array(PIL.Image.open(fig)), (2, 0, 1))
