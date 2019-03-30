@@ -3,9 +3,7 @@ from api import CrawlerDetector
 import argparse
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('-v', '--vid_path', type=str, default="/home/apumarola/datasets/aeroarms_dataset_processed/pos/color/output.mp4", help='video path')
-# parser.add_argument('-v', '--vid_path', type=str, default="/home/apumarola/datasets/aeroarms_dataset_processed/pos/color/output.mp4", help='video path')
-parser.add_argument('-v', '--vid_path', type=str, default="/home/apumarola/datasets/aeroarms_dataset_processed/pos/vid1.mp4", help='video path')
+parser.add_argument('-v', '--vid_path', type=str, default="/home/apumarola/datasets/aeroarms_video/output.mp4", help='video path')
 
 args = parser.parse_args()
 
@@ -17,6 +15,8 @@ class DetectVidNoRos:
         self._run()
 
     def _run(self):
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter('output.avi', fourcc, 3.0, (224, 224))
         n_to_process = self._process_every_n
 
         while True:
@@ -24,14 +24,16 @@ class DetectVidNoRos:
             n_to_process -= 1
 
             if ret and n_to_process == 0:
-                self._detect_crawler(frame)
+                _, _, result = self._detect_crawler(frame)
+                out.write(result)
                 n_to_process = self._process_every_n
 
             # Quit with q
-            if cv2.waitKey(100) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
         self._video_capture.release()
+        out.release()
         cv2.destroyAllWindows()
 
     def _detect_crawler(self, frame):

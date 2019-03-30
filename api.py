@@ -7,7 +7,7 @@ from models.models import ModelsFactory
 import numpy as np
 
 class CrawlerDetector:
-    def __init__(self, prob_threshold=0.7, do_filter_prob=True):
+    def __init__(self, prob_threshold=0.7, do_filter_prob=False):
         self._prob_treshold = prob_threshold
         self._do_filter_prob = do_filter_prob
         self._detected_in_previous_frame = False
@@ -28,13 +28,13 @@ class CrawlerDetector:
         # display detection
         if do_display_detection:
             # self._display_center(crop_frame, uv_max, final_prob, elapsed_time)
-            self._display_hm(crop_frame, hm, uv_max, final_prob, elapsed_time, prob_threshold=0.5)
+            result = self._display_hm(crop_frame, hm, uv_max, final_prob, elapsed_time, prob_threshold=0.5)
 
         # update prob filter
         if self._do_filter_prob:
             self._update_prob_filter(prob)
 
-        return hm, uv_max
+        return hm, uv_max, result
 
     def _preprocess_frame(self, frame, is_bgr):
         # resize frame to half
@@ -84,8 +84,8 @@ class CrawlerDetector:
 
     def _display_hm(self, frame, hm, uv_max, prob, elapsed_time, prob_threshold=0.5):
 
-        if prob is not None and prob < self._prob_treshold:
-            hm = np.ones_like(hm)*0.001
+        # if prob is not None and prob < self._prob_treshold:
+        #     hm = np.ones_like(hm)*0.001
 
         # display hm
         hm = (np.transpose(hm, (1, 2, 0)) * 255).astype(np.uint8)
@@ -96,17 +96,21 @@ class CrawlerDetector:
         #display uv_max
         # frame = cv2.circle(frame, uv_max, 3, (255, 255, 0))
 
+        frame = cv2.resize(frame, (224,224))
+
         # display detection time
         h, w, _ = frame.shape
         detection_time_txt = 'Detection Time[s]: %.3f' % elapsed_time
-        cv2.putText(frame, detection_time_txt, (w - 128, h - 5), cv2.FONT_HERSHEY_DUPLEX, 0.3, (255, 255, 0), 1)
+        cv2.putText(frame, detection_time_txt, (w - 219, h - 5), cv2.FONT_HERSHEY_DUPLEX, 0.3, (255, 255, 0), 1)
 
         # prob
         if prob is not None:
-            cv2.putText(frame, 'prob: %.2f' % prob, (w - 128, h - 20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
+            cv2.putText(frame, 'prob: %.2f' % prob, (w - 219, h - 20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 0), 1)
 
         # display frame
         cv2.imshow('Crawler Detector HM', frame)
+
+        return frame
 
     def _display_center(self, frame, uv_max, prob, elapsed_time):
         h, w, _ = frame.shape
