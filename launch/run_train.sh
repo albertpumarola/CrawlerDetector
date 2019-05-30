@@ -264,7 +264,7 @@ export CUDA_VISIBLE_DEVICES=$GPU
 #--nepochs_decay 50
 
 python train.py \
---name object_detector_prob2_12 \
+--name object_detector_prob2_15 \
 --model object_detector_net_prob2 \
 --checkpoints_dir ./checkpoints/object_detector_unet/ \
 --batch_size 40 \
@@ -274,4 +274,4 @@ python train.py \
 --poses_g_sigma 0.6 \
 --lr 0.001 \
 --nepochs_no_decay 1 \
---nepochs_decay 300
+--nepochs_decay 460

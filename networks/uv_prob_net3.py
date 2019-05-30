@@ -25,7 +25,7 @@ class VGG11(nn.Module):
         super(VGG11, self).__init__()
 
         self._vgg11 = models.vgg11(pretrained=True).features
-
+        #
         # for param in self._vgg11.parameters():
         #     param.requires_grad = False
 

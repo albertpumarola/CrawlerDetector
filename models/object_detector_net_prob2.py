@@ -127,7 +127,7 @@ class ObjectDetectorNetModel(BaseModel):
         # self._update_lr(self._optimizer, self._current_lr, new_lr, 'net')
         # self._current_lr = new_lr
 
-        every = 150
+        every = 135
         factor = 0.5
         new_lr = self._current_lr * factor if (epoch+1) % every == 0 else self._current_lr
         if new_lr != self._current_lr:
@@ -146,6 +146,8 @@ class ObjectDetectorNetModel(BaseModel):
         # initialize learning rate
         self._current_lr = self._opt.lr
 
+        # self._optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self._net.parameters()),
+        #                                    lr=self._current_lr, weight_decay=1e-5, momentum=0.9)
         # initialize optimizers
         self._optimizer = torch.optim.SGD(self._net._pos_reg.parameters(),
                                            lr=self._current_lr, weight_decay=5e-4, momentum=0.9)
@@ -157,8 +159,8 @@ class ObjectDetectorNetModel(BaseModel):
         })
         self._optimizer.add_param_group({
             'params': self._net._vgg11.parameters(),
-            'lr': self._current_lr * 0.01,
-            'lr_factor': 0.01,
+            'lr': self._current_lr,
+            'lr_factor': 1,
             'weight_decay': 5e-4,
             'momentum': 0.9
         })
