@@ -1,0 +1,74 @@
+0.- Download code
+cd /home/lab/albertpum/code/
+git clone https://github.com/albertpumarola/CrawlerDetector.git
+
+1.- Create new dataset dir
+cd /home/lab/albertpum/dataset/
+mkdir -p new_dataset/pos/rosbag
+mkdir -p new_dataset/pos/color
+mkdir -p new_dataset/pos/labels
+mkdir -p new_dataset/neg/rosbag
+mkdir -p new_dataset/neg/color
+
+2.- Record rosbags
+rosbag record /stereo/left/image_rect_color
+
+3.- Extract rosbags
+cd /home/lab/albertpum/code/CrawlerDetector/prepare_dataset
+
+mkdir /home/lab/albertpum/dataset/new_dataset/pos/rosbag/seq1
+python rosbag_to_image.py /home/lab/albertpum/dataset/rosbags/2019-03-27-18-37-54.bag /home/lab/albertpum/dataset/new_dataset/pos/rosbag/seq1 /stereo/left/image_rect_color
+
+mkdir /home/lab/albertpum/dataset/new_dataset/pos/rosbag/seq2
+python rosbag_to_image.py /home/lab/albertpum/dataset/rosbags/2019-03-27-18-38-35.bag /home/lab/albertpum/dataset/new_dataset/pos/rosbag/seq2 /stereo/left/image_rect_color
+
+4.- Select samples
+python select_samples.py --input_bags_dir /home/lab/albertpum/dataset/new_dataset/pos/rosbag/ --output_bags_dir /home/lab/albertpum/dataset/new_dataset/pos/color/
+
+5.- Resize dataset
+python resize_dataset.py --input_images_dir /home/lab/albertpum/dataset/new_dataset/pos/color/ --output_images_dir /home/lab/albertpum/dataset/new_dataset/pos/color_resize/
+
+
+6.- Label dataset
+source activate cagedetector
+cd /home/lab/albertpum/code/labelImg
+python labelImg.py
+
+store files in: /home/lab/albertpum/dataset/new_dataset/pos/labels
+
+7.- Upload zip of dataset to Dropbox
+home/lab/albertpum/dataset/new_dataset/
+
+8.- Download dataset into alakazam
+ssh apumarola@irigate.iri.upc.edu
+ssh apumarola@192.168.101.156
+cd ~/Downloads
+wget link_to_dataset
+
+9.- Copy data
+tar -xvzf new_dataset.tar.gz
+cp new_dataset/pos/color_resize/* ~/datasets/cagedetector/pos/color_resize/
+cp new_dataset/neg/color_resize/* ~/datasets/cagedetector/neg/color_resize/
+cp new_dataset/pos/labels/* ~/datasets/cagedetector/pos/labels/
+
+10.- Extract labels
+cd ~/code/phd/CrawlerDetector/prepare_dataset
+source activate crawlerdetector
+python extract_hms_labelImg.py --input_hms_dir ~/datasets/cagedetector/pos/labels/ --output_hms_dir ~/datasets/cagedetector/pos/
+
+11.- Split dataset
+python split_train_test_hm.py --input_dir_imgs ~/datasets/cagedetector/pos/color_resize/ --input_dir_hms ~/datasets/cagedetector/pos/labels/ --output_dir  ~/datasets/cagedetector/
+
+12.- Train
+tmux a
+cd ~/code/phd/CrawlerDetector
+source activate crawlerdetector
+bash launch/run_train.sh
+
+13.- Move train weights to pretrain_weights folder
+14.- Push weights
+
+
+
+
+

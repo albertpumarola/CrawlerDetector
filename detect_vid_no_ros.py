@@ -1,9 +1,13 @@
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+
 import cv2
 from api import CrawlerDetector
 import argparse
+import sys
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', '--vid_path', type=str, default="/home/apumarola/datasets/aeroarms_video/output.mp4", help='video path')
+parser.add_argument('-v', '--vid_path', type=str, default="/home/lab/Downloads/vid1.mp4", help='video path')
 
 args = parser.parse_args()
 
