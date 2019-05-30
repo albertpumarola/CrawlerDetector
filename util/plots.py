@@ -92,7 +92,7 @@ def plot_center(image, uv, prob=None):
     ax.imshow(image)
 
     x, y = uv[1], uv[0]
-    ax.add_patch(patches.Circle((x, y), 5, color='red'))
+    ax.add_patch(patches.Circle((x, y), 3, color='red'))
 
     if prob is not None:
         ax.text(0.5, 0.9, prob, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,

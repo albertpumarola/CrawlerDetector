@@ -7,7 +7,7 @@ import cv2
 import math
 
 
-def tensor2im(img, imtype=np.uint8, unnormalize=True, nrows=None, to_numpy=False, scale=0.5, interpolation=cv2.INTER_LINEAR):
+def tensor2im(img, imtype=np.uint8, unnormalize=True, nrows=None, to_numpy=False, scale=1, interpolation=cv2.INTER_LINEAR):
     # select a sample or create grid if img is a batch
     if len(img.shape) == 4:
         nrows = nrows if nrows is not None else int(math.sqrt(img.size(0)))

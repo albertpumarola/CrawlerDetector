@@ -40,7 +40,10 @@ class ObjectHMDataset(DatasetBase):
                 print ('error reading %s, skipping sample' % sample_id)
 
         # neg data
-        neg_index = random.randint(0, self._neg_dataset_size - 1)
+        if self._is_for_train:
+            neg_index = random.randint(int(self._neg_dataset_size * 0.1), self._neg_dataset_size-1)
+        else:
+            neg_index = random.randint(0, int(self._neg_dataset_size * 0.1))
         neg_img, neg_img_path = self._get_image_by_id(neg_index, pos_sample=False)
 
         # augment data
@@ -125,7 +128,8 @@ class ObjectHMDataset(DatasetBase):
         self._transform = transforms.Compose(transform_list)
 
     def _normalize_hm(self, hm):
-        return (hm.astype(np.float32) / (self._opt.net_image_size-1) - 0.5) * 2.
+        # return (hm.astype(np.float32) / (self._opt.net_image_size-1) - 0.5) * 2.
+        return hm.astype(np.float32) / (self._opt.net_image_size - 1)
 
     def _augment_data(self, img, hm):
         aug_type = random.choice(['', 'h', 'v', 'hv'])

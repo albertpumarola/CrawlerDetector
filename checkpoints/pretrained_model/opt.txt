@@ -3,7 +3,7 @@ batch_size: 2
 bbs_filename: bbs.pkl
 checkpoints_dir: ./checkpoints
 classifier_threshold: 0.5
-data_dir: /home/apumarola/datasets/aeroarms_dataset_processed
+data_dir: /home/apumarola/datasets/cagedetector
 dataset_mode: object_hm
 gpu_ids: []
 hms_filename: hms.pkl
@@ -13,18 +13,18 @@ images_folder: color_resize
 is_train: False
 lambda_bb: 1000
 lambda_prob: 1000
-load_epoch: 183
+load_epoch: 100
 lr: 0.0002
 model: object_detector_unet
 n_threads_test: 1
 name: pretrained_model
-neg_file_name: neg
+neg_file_name: neg3
 net_image_size: 128
 output_estimation_dir: /media/apumarola/ssd_dataset/object_detector/test
 poses_g_sigma: 0.06
 serial_batches: False
 test_ids_file: test_ids.csv
-test_pos_file_name: pos
+test_pos_file_name: pos3
 train_ids_file: train_ids.csv
-train_pos_file_name: pos
+train_pos_file_name: pos3
 -------------- End ----------------

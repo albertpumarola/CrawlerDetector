@@ -79,7 +79,7 @@ class UpConvS(nn.Module):
                                       activation])
 
     def forward(self, x, s):
-        y = self._conv1(F.interpolate(x, scale_factor=2, mode='bilinear'))
+        y = self._conv1(F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False))
         return self._conv2(torch.cat((y, s), 1))
 
 class UpConv(nn.Module):
@@ -91,4 +91,4 @@ class UpConv(nn.Module):
                                       activation])
 
     def forward(self, x):
-        return self._conv1(F.interpolate(x, scale_factor=2, mode='bilinear'))
+        return self._conv1(F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False))
