@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 class JointsUtils:
-    def __init__(self, num_sigmas, size, sigma, device_master, max=1, min=0.001):
+    def __init__(self, num_sigmas, size, sigma, device_master, max=3, min=0.0001):
         X, Y = np.meshgrid(np.linspace(-1., 1., size), np.linspace(-1., 1., size))
         grid = np.stack([Y, X], axis=-1)
         sigma = np.ones([num_sigmas, 2]) * sigma

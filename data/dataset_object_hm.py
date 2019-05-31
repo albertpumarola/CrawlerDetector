@@ -128,8 +128,8 @@ class ObjectHMDataset(DatasetBase):
         self._transform = transforms.Compose(transform_list)
 
     def _normalize_hm(self, hm):
-        # return (hm.astype(np.float32) / (self._opt.net_image_size-1) - 0.5) * 2.
-        return hm.astype(np.float32) / (self._opt.net_image_size - 1)
+        return (hm.astype(np.float32) / (self._opt.net_image_size-1) - 0.5) * 2.
+        # return hm.astype(np.float32) / (self._opt.net_image_size - 1)
 
     def _augment_data(self, img, hm):
         aug_type = random.choice(['', 'h', 'v', 'hv'])

@@ -61,7 +61,7 @@ def plot_overlay_attention(image, attention,
     # heatmap = ax.imshow(attention, cmap=cmap,
     #                     alpha=alpha, extent=[0, H, 0, W], vmin=np.min(attention), vmax=np.max(attention))
     heatmap = ax.imshow(attention, cmap=cmap,
-                        alpha=alpha, extent=[0, H, 0, W], vmin=0, vmax=1)
+                        alpha=alpha, extent=[0, H, 0, W], vmin=0)
     if prob is not None:
         ax.text(0.5, 0.9, prob, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,
                 color='red', fontsize=30)
@@ -73,12 +73,13 @@ def plot_overlay_attention(image, attention,
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(heatmap, cax=cax)
-    fig.canvas.draw()
 
-    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-    plt.close(fig)
-    return data
+    buf = io.BytesIO()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    plt.savefig(buf, format='jpeg', facecolor='#AAAAAA')
+    buf.seek(0)
+    plt.close()
+    return io_to_numpy(buf)
 
 def plot_center(image, uv, prob=None):
     """
@@ -114,7 +115,7 @@ def plot_hm(image, hm_ij, alpha=0.3, cmap='jet'):
 
     fig = plt.figure()
     plt.imshow(image)
-    plt.imshow(hm_ij, cmap=cmap, alpha=alpha, vmin=0, vmax=1)  # it requires ij
+    plt.imshow(hm_ij, cmap=cmap, alpha=alpha, vmin=0, vmax=0.01)  # it requires ij
 
     buf = io.BytesIO()
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)

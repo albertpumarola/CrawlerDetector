@@ -58,6 +58,9 @@ class NetworksFactory:
         elif network_name == 'unet':
             from .unet import UNet
             network = UNet(*args, **kwargs)
+        elif network_name == 'unet_small':
+            from .unet_small import UNet
+            network = UNet(*args, **kwargs)
         else:
             network = None
             raise ValueError("Network [%s] not recognized." % network_name)

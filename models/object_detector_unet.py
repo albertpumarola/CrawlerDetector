@@ -125,33 +125,36 @@ class ObjectDetectorNetModel(BaseModel):
             # load optimizers
             self._load_optimizer(self._optimizer, 'net', self._opt.load_epoch)
 
-    def update_learning_rate(self):
-        # updated learning rate bb net
-        lr_decay= self._opt.lr / self._opt.nepochs_decay
-        new_lr = self._current_lr - lr_decay
-        self._update_lr(self._optimizer, self._current_lr, new_lr, 'net')
-        self._current_lr = new_lr
+    def update_learning_rate(self, epoch):
+        every = 100
+        factor = 0.5
+        new_lr = self._current_lr * factor if (epoch + 1) % every == 0 else self._current_lr
+        if new_lr != self._current_lr:
+            self._update_lr(self._optimizer, self._current_lr, new_lr, 'net')
+            self._current_lr = new_lr
 
 
     # --- INITIALIZER HELPERS ---
 
     def _init_create_networks(self):
         # features network
-        self._net = NetworksFactory.get_by_name('unet')
+        self._net = NetworksFactory.get_by_name('unet_small')
         self._net = self._move_net_to_gpu(self._net)
 
     def _init_prefetch_create_hm_vars(self):
         sigma = 0.05
         self._joint_utils = JointsUtils(1, self._opt.net_image_size, sigma, self._device)
-        self._zero_hms = torch.ones([self._opt.batch_size, 1, self._opt.net_image_size, self._opt.net_image_size]).to(self._device) * 0.001
+        self._zero_hms = torch.ones([self._opt.batch_size, 1, self._opt.net_image_size, self._opt.net_image_size]).to(self._device) * 0.0001
 
     def _init_train_vars(self):
         # initialize learning rate
         self._current_lr = self._opt.lr
 
         # initialize optimizers
+        # self._optimizer = torch.optim.SGD(self._net.parameters(),
+        #                                   lr=self._current_lr, weight_decay=5e-4, momentum=0.9)
         self._optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self._net.parameters()),
-                                           lr=self._current_lr, weight_decay=1e-5)
+                                           lr=self._current_lr, weight_decay=5e-4)
 
     def _init_losses(self):
         # define loss functions
@@ -167,7 +170,7 @@ class ObjectDetectorNetModel(BaseModel):
             neg_p = self._net(self._neg_input_img)
 
             # calculate losses
-            self._loss_pos_p = self._criterion_pos(pos_p, self._input_hms) * self._opt.lambda_bb
+            self._loss_pos_p = self._criterion_pos(pos_p, self._input_hms) * self._opt.lambda_bb * 10
             self._loss_neg_p = self._criterion_pos(neg_p, self._zero_hms) * self._opt.lambda_bb
 
             # combined loss (move loss bb to gpu 0)
@@ -191,12 +194,13 @@ class ObjectDetectorNetModel(BaseModel):
         self._vis_input_neg_img = util.tensor2im(neg_imgs.clone().detach(), scale=1)
 
         pos_img_hm = util.tensor2im(pos_imgs[0, ...].clone().detach().cpu(), to_numpy=True, scale=1)
-        self._vis_pos_p = plots.plot_hm(pos_img_hm, pos_p[0, 0, ...].clone().detach().cpu())
-        self._vis_input_pos_p = plots.plot_hm(pos_img_hm, gt_pos_p[0, 0, ...].clone().detach().cpu())
+        print(torch.max(pos_p[0, 0, ...]), torch.min(pos_p[0, 0, ...]))
+        self._vis_pos_p = plots.plot_overlay_attention(pos_img_hm, pos_p[0, 0, ...].clone().detach().cpu())
+        self._vis_input_pos_p = plots.plot_overlay_attention(pos_img_hm, gt_pos_p[0, 0, ...].clone().detach().cpu())
 
         neg_img_hm = util.tensor2im(neg_imgs[0, ...].clone().detach().cpu(), to_numpy=True, scale=1)
-        self._vis_neg_p = plots.plot_hm(neg_img_hm, neg_p[0, 0, ...].clone().detach().cpu())
-        self._vis_input_neg_p = plots.plot_hm(neg_img_hm, gt_neg_p[0, 0, ...].clone().detach().cpu())
+        self._vis_neg_p = plots.plot_overlay_attention(neg_img_hm, neg_p[0, 0, ...].clone().detach().cpu())
+        self._vis_input_neg_p = plots.plot_overlay_attention(neg_img_hm, gt_neg_p[0, 0, ...].clone().detach().cpu())
 
     def _keep_estimation(self, estim_pos_bb_lowres, estim_pos_prob, estim_neg_prob):
         return None

@@ -15,7 +15,7 @@ class UNet(NetworkBase):
         self._conv1 = nn.Sequential(*[conv(input_nc, 32, 7, stride=1, padding=3), norm_layer(32), activation])
         self._conv2 = nn.Sequential(*[conv(32, 32, 7, stride=1, padding=3), norm_layer(32), activation])
         self._conv3 = nn.Sequential(*[conv(32+input_nc, 32, 3, stride=1, padding=1), norm_layer(32), activation])
-        self._conv4 = nn.Sequential(*[conv(32, output_nc, 3, stride=1, padding=1)])
+        self._conv4 = nn.Sequential(*[conv(32, output_nc, 3, stride=1, padding=1), nn.Sigmoid()])
 
         n_down = 5
         in_ch = 32
