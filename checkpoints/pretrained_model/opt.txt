@@ -13,7 +13,7 @@ images_folder: color_resize
 is_train: False
 lambda_bb: 1000
 lambda_prob: 1000
-load_epoch: 183
+load_epoch: 100
 lr: 0.0002
 model: object_detector_unet
 n_threads_test: 1
