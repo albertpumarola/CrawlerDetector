@@ -52,8 +52,14 @@ class NetworksFactory:
         elif network_name == 'uv_prob_net2':
             from .uv_prob_net2 import uvProbNet
             network = uvProbNet(*args, **kwargs)
+        elif network_name == 'uv_prob_net3':
+            from .uv_prob_net3 import uvProbNet
+            network = uvProbNet(*args, **kwargs)
         elif network_name == 'unet':
             from .unet import UNet
+            network = UNet(*args, **kwargs)
+        elif network_name == 'unet_small':
+            from .unet_small import UNet
             network = UNet(*args, **kwargs)
         else:
             network = None

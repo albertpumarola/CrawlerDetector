@@ -40,7 +40,7 @@ class Train:
 
             # update learning rate
             if i_epoch > self._opt.nepochs_no_decay:
-                self._model.update_learning_rate()
+                self._model.update_learning_rate(i_epoch)
 
         # save last epoch
         if i_epoch is not None:

@@ -12,10 +12,10 @@ class BaseOptions():
         self._opt = None
 
     def initialize(self):
-        self._parser.add_argument('--data_dir', type=str, default='/home/apumarola/datasets/aeroarms_dataset_processed', help='path to train data')
-        self._parser.add_argument('--neg_file_name', type=str, default='neg', help='neg images folder')
-        self._parser.add_argument('--train_pos_file_name', type=str, default='pos', help='train images folder')
-        self._parser.add_argument('--test_pos_file_name', type=str, default='pos', help='test images folder')
+        self._parser.add_argument('--data_dir', type=str, default='/home/apumarola/datasets/cagedetector', help='path to train data')
+        self._parser.add_argument('--neg_file_name', type=str, default='neg3', help='neg images folder')
+        self._parser.add_argument('--train_pos_file_name', type=str, default='pos3', help='train images folder')
+        self._parser.add_argument('--test_pos_file_name', type=str, default='pos3', help='test images folder')
         self._parser.add_argument('--images_folder', type=str, default='color_resize', help='pos images folder')
         self._parser.add_argument('--bbs_filename', type=str, default='bbs.pkl', help='pos bounding boxes files')
         self._parser.add_argument('--hms_filename', type=str, default='hms.pkl', help='pos hm files')

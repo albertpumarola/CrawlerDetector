@@ -26,6 +26,9 @@ class ModelsFactory:
         elif model_name == 'object_detector_net_prob':
             from .object_detector_net_prob import ObjectDetectorNetModel
             model = ObjectDetectorNetModel(opt)
+        elif model_name == 'object_detector_net_prob2':
+            from .object_detector_net_prob2 import ObjectDetectorNetModel
+            model = ObjectDetectorNetModel(opt)
         elif model_name == 'object_detector_unet':
             from .object_detector_unet import ObjectDetectorNetModel
             model = ObjectDetectorNetModel(opt)
@@ -89,7 +92,7 @@ class BaseModel(object):
     def load(self):
         assert False, "load not implemented"
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, i_epoch):
         pass
 
     def print_network(self, network):
@@ -156,5 +159,6 @@ class BaseModel(object):
 
     def _update_lr(self, optimizer, old_lr, new_lr, network_name):
         for param_group in optimizer.param_groups:
-            param_group['lr'] = new_lr
+            lr_factor = param_group.get('lr_factor', 1)
+            param_group['lr'] = new_lr * lr_factor
         print('update %s learning rate: %f -> %f' % (network_name, old_lr, new_lr))

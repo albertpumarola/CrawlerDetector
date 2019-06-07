@@ -210,8 +210,6 @@
 #--nepochs_decay 100
 
 #uv_prob_net2 32
-GPU=1
-export CUDA_VISIBLE_DEVICES=$GPU
 # no pretrained weights
 #python train.py \
 #--name object_detector_net_prob3 \
@@ -238,45 +236,57 @@ export CUDA_VISIBLE_DEVICES=$GPU
 #--nepochs_decay 200
 
 
+#python train.py \
+#--name object_detector_net_unet_newdata_close_1 \
+#--model object_detector_unet \
+#--checkpoints_dir ./checkpoints/object_detector_unet/ \
+#--batch_size 10 \
+#--gpu_ids 0 \
+#--lambda_prob 100 \
+#--poses_g_sigma 0.6 \
+#--lr 0.0001 \
+#--nepochs_no_decay 1 \
+#--nepochs_decay 460
+
+
+GPU=0
+export CUDA_VISIBLE_DEVICES=$GPU
 python train.py \
---name object_detector_net_unet_8 \
+--name object_detector_net_unet_newdata_close_13 \
 --model object_detector_unet \
 --checkpoints_dir ./checkpoints/object_detector_unet/ \
---batch_size 10 \
+--batch_size 100 \
 --gpu_ids 0 \
 --lambda_prob 100 \
 --poses_g_sigma 0.6 \
---lr 0.0001 \
---nepochs_no_decay 50 \
---nepochs_decay 50
+--lr 0.0002 \
+--nepochs_no_decay 1 \
+--nepochs_decay 460
 
 
-##3 with batchnorm
-#GPU=0
+#GPU=1
 #export CUDA_VISIBLE_DEVICES=$GPU
-## no pretrained weights
 #python train.py \
-#--name object_detector_net_prob4 \
-#--model object_detector_net_prob \
-#--checkpoints_dir ./checkpoints/object_detector_net_prob/ \
-#--batch_size 60 \
+#--name object_detector_net_unet_newdata_close_11 \
+#--model object_detector_unet \
+#--checkpoints_dir ./checkpoints/object_detector_unet/ \
+#--batch_size 100 \
 #--gpu_ids 0 \
 #--lambda_prob 100 \
 #--poses_g_sigma 0.6 \
-#--nepochs_no_decay 500 \
-#--nepochs_decay 100
-#
-##2 with mse
-#GPU=0
-#export CUDA_VISIBLE_DEVICES=$GPU
-## no pretrained weights
+#--lr 0.002 \
+#--nepochs_no_decay 1 \
+#--nepochs_decay 460
+
 #python train.py \
-#--name object_detector_net_prob5 \
-#--model object_detector_net_prob \
-#--checkpoints_dir ./checkpoints/object_detector_net_prob/ \
-#--batch_size 60 \
+#--name object_detector_prob2_15 \
+#--model object_detector_net_prob2 \
+#--checkpoints_dir ./checkpoints/object_detector_unet/ \
+#--batch_size 40 \
 #--gpu_ids 0 \
-#--lambda_prob 100 \
+#--lambda_bb 80 \
+#--lambda_prob 1 \
 #--poses_g_sigma 0.6 \
-#--nepochs_no_decay 500 \
-#--nepochs_decay 100
+#--lr 0.001 \
+#--nepochs_no_decay 1 \
+#--nepochs_decay 460
