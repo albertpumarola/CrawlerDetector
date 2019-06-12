@@ -31,6 +31,8 @@ class CrawlerDetector:
             # self._display_center(crop_frame, uv_max, final_prob, elapsed_time)
             # result = self._display_hm(crop_frame, hm, uv_max, final_prob, elapsed_time, prob_threshold=0.5)
             result = self._display_center(frame, uv_max, prob, elapsed_time)
+        else:
+            result = None
 
         # update prob filter
         if self._do_filter_prob:
