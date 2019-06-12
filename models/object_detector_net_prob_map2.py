@@ -208,7 +208,10 @@ class ObjectDetectorNetModel(BaseModel):
     def _forward(self, keep_data_for_visuals, keep_estimation):
         with torch.set_grad_enabled(self._is_train):
             # estim bb and prob
+            import time
+            s = time.time()
             pos_hm, pos_prob = self._net(self._pos_input_img)
+            print(time.time()-s)
             neg_hm, neg_prob = self._net(self._neg_input_img)
 
             # calculate losses

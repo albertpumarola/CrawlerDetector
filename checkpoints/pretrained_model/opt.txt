@@ -5,7 +5,7 @@ checkpoints_dir: ./checkpoints
 classifier_threshold: 0.5
 data_dir: /home/apumarola/datasets/cagedetector
 dataset_mode: object_hm
-gpu_ids: []
+gpu_ids: [0]
 hms_filename: hms.pkl
 image_size_h: 240
 image_size_w: 320
@@ -13,7 +13,7 @@ images_folder: color_resize
 is_train: False
 lambda_bb: 1000
 lambda_prob: 1000
-load_epoch: 100
+load_epoch: 461
 lr: 0.0002
 model: object_detector_unet
 n_threads_test: 1

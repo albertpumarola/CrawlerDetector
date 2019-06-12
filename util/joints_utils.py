@@ -44,4 +44,22 @@ class JointsUtils:
     def get_max_pixel_activation(self, hm):
         s = hm.size(-1)
         val, index = torch.Tensor.max(hm.view(1, -1), 1)
-        return index % s, index / s, val
+        return index / s, index % s, val
+        #
+        # g_size = int(hm.size()[-1])
+        # idxs_range = (torch.arange(0, g_size).float() / g_size - 0.5) * 2
+        # idxs = idxs_range.view([1, -1])
+        #
+        # # pose_hm = self._threshold_hm(pose_hm)
+        # u_compr = torch.sum(hm, -2)
+        # u_compr_norm = u_compr / torch.unsqueeze(torch.sum(u_compr, -1), -1)
+        # u_prob = torch.sum(u_compr_norm * idxs, -1)
+        #
+        # v_compr = torch.sum(hm, -1)
+        # v_compr_norm = v_compr / torch.unsqueeze(torch.sum(v_compr, -1), -1)
+        # v_prob = torch.sum(v_compr_norm * idxs, -1)
+        #
+        # u_prob = int((u_prob[0][0] + 1) / 2.0 * g_size)
+        # v_prob = int((v_prob[0][0] + 1) / 2.0 * g_size)
+        # return v_prob, u_prob, hm[0,0, u_prob, v_prob]
+

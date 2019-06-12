@@ -58,10 +58,10 @@ class ObjectDetectorNetModel(BaseModel):
 
     def test(self, image, do_normalize_output=False):
         with torch.no_grad():
-            estim_hm = self._net(image)
+            estim_hm = self._net(image.to(self._device))
             u_max, v_max, val = self._joint_utils.get_max_pixel_activation(estim_hm)
 
-        return estim_hm.detach().numpy(), (u_max.detach().numpy(), v_max.detach().numpy()), val
+        return estim_hm.detach().cpu().numpy(), (u_max, v_max), val
 
     def optimize_parameters(self):
         self._optimizer.step()
@@ -166,7 +166,10 @@ class ObjectDetectorNetModel(BaseModel):
     def _forward(self, keep_data_for_visuals, keep_estimation):
         with torch.set_grad_enabled(self._is_train):
             # estim bb and prob
+            import time
+            s = time.time()
             pos_p = self._net(self._pos_input_img)
+            print(time.time() - s)
             neg_p = self._net(self._neg_input_img)
 
             # calculate losses

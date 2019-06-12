@@ -21,6 +21,7 @@ class CrawlerDetector:
         # detect crawler
         crop_frame, frame_tensor = self._preprocess_frame(frame, is_bgr)
         hm, uv_max, prob, elapsed_time = self._detect_crawler(frame_tensor)
+        uv_max = self._recover_uv_orig(uv_max)
 
         # filter prob
         final_prob = self._filter_prob(prob) if self._do_filter_prob else prob
@@ -28,13 +29,21 @@ class CrawlerDetector:
         # display detection
         if do_display_detection:
             # self._display_center(crop_frame, uv_max, final_prob, elapsed_time)
-            result = self._display_hm(crop_frame, hm, uv_max, final_prob, elapsed_time, prob_threshold=0.5)
+            # result = self._display_hm(crop_frame, hm, uv_max, final_prob, elapsed_time, prob_threshold=0.5)
+            result = self._display_center(frame, uv_max, prob, elapsed_time)
 
         # update prob filter
         if self._do_filter_prob:
             self._update_prob_filter(prob)
 
         return hm, uv_max, result
+
+    def _recover_uv_orig(self, uv):
+        crop_top = int((self._opt.image_size_h - self._opt.net_image_size) / 2.0)
+        crop_left = int((self._opt.image_size_w - self._opt.net_image_size) / 2.0)
+        uv[0][0] += crop_top
+        uv[1][0] += crop_left
+        return uv
 
     def _preprocess_frame(self, frame, is_bgr):
         # resize frame to half

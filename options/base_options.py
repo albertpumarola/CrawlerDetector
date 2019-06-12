@@ -27,7 +27,7 @@ class BaseOptions():
         self._parser.add_argument('--image_size_h', type=int, default=240, help='input image size')
         self._parser.add_argument('--image_size_w', type=int, default=320, help='input image size')
         self._parser.add_argument('--net_image_size', type=int, default=128, help='input image size')
-        self._parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+        self._parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         self._parser.add_argument('--name', type=str, default='pretrained_model', help='name of the experiment. It decides where to store samples and models')
         self._parser.add_argument('--dataset_mode', type=str, default='object_hm', help='chooses how datasets are loaded. [object_bb]')
         self._parser.add_argument('--model', type=str, default='object_detector_unet', help='chooses which model to use. [object_detector_net_model]')

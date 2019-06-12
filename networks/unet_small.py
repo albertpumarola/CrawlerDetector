@@ -13,13 +13,13 @@ class UNet(NetworkBase):
 
         self._name = "UNet"
         self._conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 32, 7, stride=1, padding=3),
-                                      nn.BatchNorm2d(32),
+                                      nn.InstanceNorm2d(32),
                                       nn.ReLU(inplace=True)])
         self._conv2 = nn.Sequential(*[nn.Conv2d(32, 32, 7, stride=1, padding=3),
-                                      nn.BatchNorm2d(32),
+                                      nn.InstanceNorm2d(32),
                                       nn.ReLU(inplace=True)])
         self._conv3 = nn.Sequential(*[nn.Conv2d(32+input_nc, 32, 3, stride=1, padding=1),
-                                      nn.BatchNorm2d(32),
+                                      nn.InstanceNorm2d(32),
                                       nn.ReLU(inplace=True)])
         self._conv4 = nn.Sequential(*[nn.Conv2d(32, output_nc, 3, stride=1, padding=1)])
 
@@ -60,7 +60,7 @@ class DownConvS(nn.Module):
 
         model = [nn.AvgPool2d(2)]
         model += [nn.Conv2d(input_nc, output_nc, k_size, stride=1, padding=int((k_size - 1) / 2)),
-                  nn.BatchNorm2d(output_nc),
+                  nn.InstanceNorm2d(output_nc),
                   nn.ReLU(inplace=True)]
 
         self._down_conv = nn.Sequential(*model)
@@ -74,7 +74,7 @@ class UpConvS(nn.Module):
         super(UpConvS, self).__init__()
 
         self._conv2 = nn.Sequential(*[nn.Conv2d(input_nc + output_nc, output_nc, 3, stride=1, padding=1),
-                                      nn.BatchNorm2d(output_nc),
+                                      nn.InstanceNorm2d(output_nc),
                                       nn.ReLU(inplace=True)])
 
     def forward(self, x, s):

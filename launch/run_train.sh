@@ -249,34 +249,34 @@
 #--nepochs_decay 460
 
 
-GPU=0
-export CUDA_VISIBLE_DEVICES=$GPU
-python train.py \
---name object_detector_net_unet_newdata_close_13 \
---model object_detector_unet \
---checkpoints_dir ./checkpoints/object_detector_unet/ \
---batch_size 100 \
---gpu_ids 0 \
---lambda_prob 100 \
---poses_g_sigma 0.6 \
---lr 0.0002 \
---nepochs_no_decay 1 \
---nepochs_decay 460
-
-
-#GPU=1
+#GPU=0
 #export CUDA_VISIBLE_DEVICES=$GPU
 #python train.py \
-#--name object_detector_net_unet_newdata_close_11 \
+#--name object_detector_net_unet_newdata_close_13 \
 #--model object_detector_unet \
 #--checkpoints_dir ./checkpoints/object_detector_unet/ \
 #--batch_size 100 \
 #--gpu_ids 0 \
 #--lambda_prob 100 \
 #--poses_g_sigma 0.6 \
-#--lr 0.002 \
+#--lr 0.0002 \
 #--nepochs_no_decay 1 \
 #--nepochs_decay 460
+
+
+GPU=1
+export CUDA_VISIBLE_DEVICES=$GPU
+python train.py \
+--name object_detector_net_unet_newdata_close_15 \
+--model object_detector_unet \
+--checkpoints_dir ./checkpoints/object_detector_unet/ \
+--batch_size 100 \
+--gpu_ids 0 \
+--lambda_prob 100 \
+--poses_g_sigma 0.6 \
+--lr 0.002 \
+--nepochs_no_decay 1 \
+--nepochs_decay 460
 
 #python train.py \
 #--name object_detector_prob2_15 \
