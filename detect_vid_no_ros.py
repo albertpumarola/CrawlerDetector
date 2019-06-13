@@ -22,7 +22,7 @@ class DetectVidNoRos:
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter('output.avi', fourcc, 3.0, (224, 224))
         n_to_process = self._process_every_n
-
+        i = 0
         while True:
             ret, frame = self._video_capture.read()
             n_to_process -= 1
@@ -31,9 +31,11 @@ class DetectVidNoRos:
                 _, _, result = self._detect_crawler(frame)
                 out.write(result)
                 n_to_process = self._process_every_n
-
+                i += 1
             # Quit with q
-            if cv2.waitKey(100) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            if i == 40:
                 break
 
         self._video_capture.release()
@@ -41,7 +43,7 @@ class DetectVidNoRos:
         cv2.destroyAllWindows()
 
     def _detect_crawler(self, frame):
-        return self._crawler_detector.detect(frame, is_bgr=True, do_display_detection=True)
+        return self._crawler_detector.detect(frame, is_bgr=True, do_display_detection=False)
 
 if __name__ == '__main__':
     DetectVidNoRos()
